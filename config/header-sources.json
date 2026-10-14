@@ -1,0 +1,38 @@
+[
+  {
+    "url": "https://android.googlesource.com/platform/external/libcxx/+archive/refs/tags/android-14.0.0_r1/include.tar.gz",
+    "file": "libcxx.tar.gz",
+    "sha256": "87126a89150a1dbcf14c55a10dcc756c47ba5e3c5d0d1bc01fa7c44d3220bb94",
+    "size": 564851
+  },
+  {
+    "url": "https://android.googlesource.com/platform/bionic/+archive/refs/tags/android-14.0.0_r1/libc/include.tar.gz",
+    "file": "bionic.tar.gz",
+    "sha256": "497117ab277b510853ea3f5eb3799705aa10164ca35e108896c26307e0175c1f",
+    "size": 192572
+  },
+  {
+    "url": "https://android.googlesource.com/platform/bionic/+archive/refs/tags/android-14.0.0_r1/libc/kernel/uapi.tar.gz",
+    "file": "kernel-uapi.tar.gz",
+    "sha256": "75b9e00bdcaa1d1faa90b7ac0e52bd242f12f262cf71da4ce624e74013e449a8",
+    "size": 730750
+  },
+  {
+    "url": "https://android.googlesource.com/platform/bionic/+archive/refs/tags/android-14.0.0_r1/libc/kernel/uapi/asm-arm64.tar.gz",
+    "file": "arm64-uapi.tar.gz",
+    "sha256": "333a6c2d96bbfde940b83575432fba33a763167ab5e364690e987dbaf207dbd8",
+    "size": 8186
+  },
+  {
+    "url": "https://android.googlesource.com/platform/bionic/+archive/refs/tags/android-14.0.0_r1/libc/kernel/android.tar.gz",
+    "file": "kernel-android.tar.gz",
+    "sha256": "c5843d138836a91640c7aef613044ed67cf6bf89212ea9136f05fec5a58ab5d7",
+    "size": 5976
+  },
+  {
+    "url": "https://android.googlesource.com/platform/external/libcxxabi/+/refs/tags/android-14.0.0_r1/include/__cxxabi_config.h?format=TEXT",
+    "file": "__cxxabi_config.h",
+    "sha256": "2c18c5a6654b83e822e55f9b0b8db04ad47e5f1ccbca4b597f59cfbce8bd822e",
+    "note": "Archive symlink outside subtree was rejected; regular headers extracted and referenced ABI header fetched explicitly into project"
+  }
+]

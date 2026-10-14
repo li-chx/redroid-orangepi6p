@@ -1,0 +1,279 @@
+{
+  "base_image": "redroid/redroid@sha256:46478a567194aed24cd0877d4434a9e58b534d4aad30931eb21999a52f2ce131",
+  "base_image_id": "sha256:0595157f43bf3f0f20f3a1264220ced72fa5f1ed4385a1a6d3ebe059a5629700",
+  "vendor_archive": "Orangepi6plus_1.0.1_android14_linux6.1.44.7z",
+  "archive_sha256": "a2fbb4b8c219de2dfa9b4cee47ea830c1031253e6f99dbc6759800895ef6169e",
+  "image_sha256": "0ec827dcec25661504558979f90de8efbfeffcb0f3840de59595f4fadea4d6ad",
+  "vendor_files": [
+    {
+      "source": "vendor/bin/hw/android.hardware.graphics.allocator-service",
+      "target": "vendor/bin/hw/android.hardware.graphics.allocator-service",
+      "sha256": "8bef585aad06e517149127efd90c0ce05a3f1bf99da66062a4c9e6e922ffa42f"
+    },
+    {
+      "source": "vendor/bin/hw/android.hardware.media.c2@1.0-cix-service",
+      "target": "vendor/bin/hw/android.hardware.media.c2@1.0-cix-service",
+      "sha256": "79c9214cbfe7dcf18bcb42a1d237d73bbc938233ec5eb9f554ba9e08cd6f9a31"
+    },
+    {
+      "source": "vendor/etc/NOTICE.xml.gz",
+      "target": "vendor/etc/NOTICE.cix-original.xml.gz",
+      "sha256": "14e0a4ee736141495c3f3b7b9417e52e767567fa2cbf8e164d46684a00d25c28"
+    },
+    {
+      "source": "vendor/etc/cix_codecs_register.xml",
+      "target": "vendor/etc/cix_codecs_register.xml",
+      "sha256": "854f6107dd952a3389d51a8d055b5f28c50b08cd74ef5178d3194944332f54ba"
+    },
+    {
+      "source": "vendor/etc/gralloc/dpu.xml",
+      "target": "vendor/etc/gralloc/dpu.xml",
+      "sha256": "c68624982d7392d084058fcc6be23e671ceef5e960bd6bee000c117106d0cc35"
+    },
+    {
+      "source": "vendor/etc/gralloc/gpu.xml",
+      "target": "vendor/etc/gralloc/gpu.xml",
+      "sha256": "510e530866a802d3ec9fbabb7940f8de57f9110af4dfeedd5127201eed2bcd63"
+    },
+    {
+      "source": "vendor/etc/gralloc/vpu.xml",
+      "target": "vendor/etc/gralloc/vpu.xml",
+      "sha256": "746de3cd4c94d28ea02a2d515e7b6be3e81ce2a1d400865a0ab365df039d2670"
+    },
+    {
+      "source": "vendor/etc/init/android.hardware.graphics.allocator-V2-service.rc",
+      "target": "vendor/etc/init/android.hardware.graphics.allocator-V2-service.rc",
+      "sha256": "5379f109c6f8d3b07025eac543a242d41ba458568379f3392688f8831f273268"
+    },
+    {
+      "source": "vendor/etc/media_codecs_c2.xml",
+      "target": "vendor/etc/media_codecs_c2.xml",
+      "sha256": "a20bcbfe48e5e74ecff3939a3477d66f8e4f7c77814334a51f0b28ae1cc4a3d2"
+    },
+    {
+      "source": "vendor/etc/seccomp_policy/codec2.vendor.base.policy",
+      "target": "vendor/etc/seccomp_policy/codec2.vendor.base.policy",
+      "sha256": "9fa40264760ea065272e8660b40d3a48ec2b1f659ce014efd3ead5dd0f0c8668"
+    },
+    {
+      "source": "vendor/etc/seccomp_policy/codec2.vendor.ext.policy",
+      "target": "vendor/etc/seccomp_policy/codec2.vendor.ext.policy",
+      "sha256": "8f0035b9dff239a138ab61eb65a9eb2328363f1efcd7afbcc5391755d5e48c99"
+    },
+    {
+      "source": "vendor/etc/seccomp_policy/mediacodec.policy",
+      "target": "vendor/etc/seccomp_policy/mediacodec.policy",
+      "sha256": "23bd96af0b47b23a164ef4325ad546fa6fffa9615bb35c26e3618593da26dc02"
+    },
+    {
+      "source": "vendor/etc/vintf/manifest/manifest_allocator.xml",
+      "target": "vendor/etc/vintf/manifest/manifest_allocator.xml",
+      "sha256": "df29ff8cf4587c3be4f4e9384d578abd425b29292f7806820b9c0684029d3d1b"
+    },
+    {
+      "source": "vendor/etc/vintf/manifest/mapper.arm.xml",
+      "target": "vendor/etc/vintf/manifest/mapper.arm.xml",
+      "sha256": "ee0e6cc20bcfac4b31bd8c3d807911c260ef9721d8fd7f5e27ab9f8aa2f17aae"
+    },
+    {
+      "source": "vendor/lib64/android.hardware.graphics.common-V5-ndk.so",
+      "target": "vendor/lib64/android.hardware.graphics.common-V5-ndk.so",
+      "sha256": "627d04fdc3c2a4f32143c7436e38c5c9a2ff799efcbf379c4e38da52ebeb5a94"
+    },
+    {
+      "source": "vendor/lib64/android.hardware.media.bufferpool2-V2-ndk.so",
+      "target": "vendor/lib64/android.hardware.media.bufferpool2-V2-ndk.so",
+      "sha256": "3ee4acca4c201ed9e7b9e4f49c09c8c14ab66a528221ddcb4f6a1bd7e145c992"
+    },
+    {
+      "source": "vendor/lib64/android.hardware.media.c2-V1-ndk.so",
+      "target": "vendor/lib64/android.hardware.media.c2-V1-ndk.so",
+      "sha256": "8326e01ce4d20d4a77f9ebc43da0f524942ed14f5ad55d21e8562ae2720eca52"
+    },
+    {
+      "source": "vendor/lib64/android.hardware.media.c2@1.0.so",
+      "target": "vendor/lib64/android.hardware.media.c2@1.0.so",
+      "sha256": "ed197919996bf6c132c06242f7df3a2d08a66f44ecae3fd638e5624a324892e0"
+    },
+    {
+      "source": "vendor/lib64/android.hardware.media.c2@1.1.so",
+      "target": "vendor/lib64/android.hardware.media.c2@1.1.so",
+      "sha256": "f8adfb2dd08c7722ae1a7d555f859e762fc74177951bb79189915ae9f67b0187"
+    },
+    {
+      "source": "vendor/lib64/android.hardware.media.c2@1.2.so",
+      "target": "vendor/lib64/android.hardware.media.c2@1.2.so",
+      "sha256": "896a56f55242da417c0fb8c61692fa4525f18d7f461bdce7646cc8c87861af57"
+    },
+    {
+      "source": "vendor/lib64/arm.graphics-V5-ndk.so",
+      "target": "vendor/lib64/arm.graphics-V5-ndk.so",
+      "sha256": "fbd1d89b14dcfd4dc585ebd341a5cf495c8e5d32028b3346ff9239bca48c2dac"
+    },
+    {
+      "source": "vendor/lib64/arm.mali.platform-V2-ndk.so",
+      "target": "vendor/lib64/arm.mali.platform-V2-ndk.so",
+      "sha256": "a0e07847bf29ba540a892c04aa4f26bb9e330e0aedd3d6e7bdc73bb73473c5d1"
+    },
+    {
+      "source": "vendor/lib64/android.hardware.graphics.allocator-V2-ndk.so",
+      "target": "vendor/lib64/cix-codec/android.hardware.graphics.allocator-V2-ndk.so",
+      "sha256": "5217ef97deef8577a7fccf4c795693c1b7e5e12b16dbd8e1089fbde235c072aa"
+    },
+    {
+      "source": "vendor/lib64/libgralloctypes.so",
+      "target": "vendor/lib64/cix-codec/libgralloctypes.so",
+      "sha256": "86f4184f5707c0ec8056501a16d4f3644b31af208a3c1b60e4f6f73c83d67623"
+    },
+    {
+      "source": "vendor/lib64/libui.so",
+      "target": "vendor/lib64/cix-codec/libui.so",
+      "sha256": "c077c809eedeab25d9a5234556fcf49d3b06c5a8ed46abbd8c753c4958120276"
+    },
+    {
+      "source": "vendor/lib64/egl/libGLES_mali.so",
+      "target": "vendor/lib64/egl/libGLES_mali.so",
+      "sha256": "04d163ff65d44b39b647fcff340e79f0b8022fb9e59d3727a38accf30cadb13c"
+    },
+    {
+      "source": "vendor/lib64/hw/android.hardware.graphics.allocator-V2-arm.so",
+      "target": "vendor/lib64/hw/android.hardware.graphics.allocator-V2-arm.so",
+      "sha256": "6d2f9c30833dd3f1c7ad23f65712ef991f41343e463a163f095f5985d4f03720"
+    },
+    {
+      "source": "vendor/lib64/hw/mapper.arm.so",
+      "target": "vendor/lib64/hw/mapper.arm.so",
+      "sha256": "69350cbe33fdd747cebf32b312f5b12600821509e3bd4b27e85877c9b7cd188e"
+    },
+    {
+      "source": "vendor/lib64/hw/vulkan.mali.so",
+      "target": "vendor/lib64/hw/vulkan.mali.so",
+      "sha256": "27904a441f802a9c31cac781ea30c148b39cbd644d617cd0d682a556795a1eab"
+    },
+    {
+      "source": "vendor/lib64/libavservices_minijail.so",
+      "target": "vendor/lib64/libavservices_minijail.so",
+      "sha256": "46bb344020f0a3af846f2647ee9cb0a8a896e0f480ce9d35e13ea9139e94bda2"
+    },
+    {
+      "source": "vendor/lib64/libc2plugin_store.so",
+      "target": "vendor/lib64/libc2plugin_store.so",
+      "sha256": "f363075e15c20020d062804c0b4cb3904db4682c539faaeaa7eb354a82643e3e"
+    },
+    {
+      "source": "vendor/lib64/libchrome.so",
+      "target": "vendor/lib64/libchrome.so",
+      "sha256": "d48147c049e69e87ee045fcdd668c3e4511ebfe3f0211133cc860a2f7e654501"
+    },
+    {
+      "source": "vendor/lib64/libcix_c2component_store.so",
+      "target": "vendor/lib64/libcix_c2component_store.so",
+      "sha256": "8b4cbd56d62a808115635750c84db8925c88b6389402a00215d7cf24aed40ab0"
+    },
+    {
+      "source": "vendor/lib64/libcix_v4l2_codec2_common.so",
+      "target": "vendor/lib64/libcix_v4l2_codec2_common.so",
+      "sha256": "d8ded847cfeda5fbd471299f4d08761d4300a9924f23270ed52b306596537a49"
+    },
+    {
+      "source": "vendor/lib64/libcix_v4l2_codec2_components.so",
+      "target": "vendor/lib64/libcix_v4l2_codec2_components.so",
+      "sha256": "ea3afe51fa991aba447094385036149014ff98e216cfaa36bfd3b8a26c5a7f2a"
+    },
+    {
+      "source": "vendor/lib64/libcix_v4l2_codec2_mapper.so",
+      "target": "vendor/lib64/libcix_v4l2_codec2_mapper.so",
+      "sha256": "a0d2bd87abed4a3996937b05635fd934315462be091b4643ecfcd11ef2409ff4"
+    },
+    {
+      "source": "vendor/lib64/libcodec2_hal_common.so",
+      "target": "vendor/lib64/libcodec2_hal_common.so",
+      "sha256": "73a2f5a86f6f908dda500200aaf03066ab0b586fb76238cbe0c5d2cffb95adad"
+    },
+    {
+      "source": "vendor/lib64/libcodec2_hidl@1.0.so",
+      "target": "vendor/lib64/libcodec2_hidl@1.0.so",
+      "sha256": "f33f9d1dd94bbff8ade3a5b98906dbc8f9bb4cc627b1a5606c76201916b51e0b"
+    },
+    {
+      "source": "vendor/lib64/libcodec2_hidl@1.1.so",
+      "target": "vendor/lib64/libcodec2_hidl@1.1.so",
+      "sha256": "29eadd8398a8a6cbafa94ed450d3d34dc992e065c6fabb7c099aa352c420aa2d"
+    },
+    {
+      "source": "vendor/lib64/libcodec2_hidl@1.2.so",
+      "target": "vendor/lib64/libcodec2_hidl@1.2.so",
+      "sha256": "065a304c189e693fce19ede4c67faa1a6a44a805960268757af7fa3a7c7267cb"
+    },
+    {
+      "source": "vendor/lib64/libcodec2_hidl_plugin.so",
+      "target": "vendor/lib64/libcodec2_hidl_plugin.so",
+      "sha256": "6a7a80ee89cecfe1ec4cf2f752312cd5cd1f9bd2643709dc9cdf7bc22e2a5457"
+    },
+    {
+      "source": "vendor/lib64/libcodec2_soft_common.so",
+      "target": "vendor/lib64/libcodec2_soft_common.so",
+      "sha256": "85c45212acf2a6411b7f50832db32ca095f5c8b2d5622501a29450943204076d"
+    },
+    {
+      "source": "vendor/lib64/libcodec2_vndk.so",
+      "target": "vendor/lib64/libcodec2_vndk.so",
+      "sha256": "e946fbb2ae3eddbaa3ddcd258f59d7cf330dfa19f31765d6dd6da1c65275d756"
+    },
+    {
+      "source": "vendor/lib64/libdrm.so",
+      "target": "vendor/lib64/libdrm.so",
+      "sha256": "f68a97911d4853ec36992d0c5f3e53146beaca9e1bb51e8bdf1ef03fd8aab3c7"
+    },
+    {
+      "source": "vendor/lib64/libsfplugin_ccodec_utils.so",
+      "target": "vendor/lib64/libsfplugin_ccodec_utils.so",
+      "sha256": "8e2672d33693c1098b26fcd0223f5bb5fa9a3ff0d31336cf58cd4ed1de6398fb"
+    },
+    {
+      "source": "vendor/lib64/libstagefright_aidl_bufferpool2.so",
+      "target": "vendor/lib64/libstagefright_aidl_bufferpool2.so",
+      "sha256": "6e8a70d84e54d01570fd94079541d631dfbcce747da3c8c6f078345d59d07c5f"
+    },
+    {
+      "source": "vendor/lib64/libstagefright_bufferpool@2.0.1.so",
+      "target": "vendor/lib64/libstagefright_bufferpool@2.0.1.so",
+      "sha256": "aa7c0232fc2a0234eded315911c49bfe906c604dd5eab49bfd734ed6a5035e99"
+    },
+    {
+      "source": "vendor/lib64/server_configurable_flags.so",
+      "target": "vendor/lib64/server_configurable_flags.so",
+      "sha256": "cce0cae240e108c26f11a9fc75e6fcf0a75d160bdb7f5af20ae6b47a6b9ba0e1"
+    }
+  ],
+  "base_files": [
+    {
+      "path": "vendor/etc/vintf/manifest.xml",
+      "sha256": "6340ac38fd5db062f98fb7e365344be53d415c0ee4a888a6e94d361b30907b86"
+    },
+    {
+      "path": "system/lib64/libc++.so",
+      "sha256": "c651f5a04b0bb99a35df466efffc571cca953cd2c2fdcd1a30290e915135cf94"
+    },
+    {
+      "path": "system/lib64/libcutils.so",
+      "sha256": "208cd60dc3e2828923507c07d3b40b2f7bab693d40745a8b2f3ae4f68c2dbac8"
+    },
+    {
+      "path": "system/lib64/libvndksupport.so",
+      "sha256": "d00a9095284b2d113707a1b376492ac40d4cbf6e8d5e26025d5ad9a3e00efe80"
+    },
+    {
+      "path": "system/lib64/liblog.so",
+      "sha256": "39bfeace8e19bfa05edfab48ef3a1c5103eb82665aa7e295d488ce4d5ed5df1b"
+    },
+    {
+      "path": "system/apex/com.android.runtime/lib64/bionic/libc.so",
+      "sha256": "45d481bf3013f50c927d1c225a26d77788b6581a95d4433d50956d3f10dcab5b"
+    },
+    {
+      "path": "system/apex/com.android.runtime/lib64/bionic/libdl.so",
+      "sha256": "10eca1437dc0d3c4e0f2dba6aca138c9cab76e12cbdc2b54719c00e0fdf57d62"
+    }
+  ]
+}

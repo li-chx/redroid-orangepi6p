@@ -1,0 +1,10 @@
+/work/
+/data/
+/dist/
+__pycache__/
+*.pyc
+*.7z
+*.img
+*.apk
+*.tar
+*.tar.gz

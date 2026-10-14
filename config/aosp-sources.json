@@ -1,0 +1,66 @@
+{
+  "composer": [
+    {
+      "file": "ComposerResources.cpp",
+      "url": "https://android.googlesource.com/platform/hardware/interfaces/+/refs/tags/android-14.0.0_r1/graphics/composer/2.1/utils/resources/ComposerResources.cpp?format=TEXT",
+      "sha256": "6de992a67c7c3d5d945e917bf7a05e59bb2b67e703776d2bfc80630c14f1dda9"
+    },
+    {
+      "file": "ComposerResources.h",
+      "url": "https://android.googlesource.com/platform/hardware/interfaces/+/refs/tags/android-14.0.0_r1/graphics/composer/2.1/utils/resources/include/composer-resources/2.1/ComposerResources.h?format=TEXT",
+      "sha256": "0dd5cfd4f6b9edded84f6efc6cc63ef7d5834d24a6d926d65d6c38fb1c014000"
+    },
+    {
+      "file": "ComposerClient.h",
+      "url": "https://android.googlesource.com/platform/hardware/interfaces/+/refs/tags/android-14.0.0_r1/graphics/composer/2.1/utils/hal/include/composer-hal/2.1/ComposerClient.h?format=TEXT",
+      "sha256": "5b6562fbd96f2324e2e3a1cdb68237eb11b4e374f3ea7d941f7c31f8d8bcd8bf"
+    },
+    {
+      "file": "native_handle.h",
+      "url": "https://android.googlesource.com/platform/system/core/+/refs/tags/android-14.0.0_r1/libcutils/include/cutils/native_handle.h?format=TEXT",
+      "sha256": "af0277ffd3756c4c1047071742c362ef1b3f036552eefad98980266fc4660e9c"
+    },
+    {
+      "file": "rect.h",
+      "url": "https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-14.0.0_r1/libs/arect/include/android/rect.h?format=TEXT",
+      "sha256": "38c24c9f3e08b8e5a577e32d0a17fa55c3a50b5820128b2663972704b4c07706"
+    },
+    {
+      "file": "cdefs.h",
+      "url": "https://android.googlesource.com/platform/bionic/+/refs/tags/android-14.0.0_r1/libc/include/sys/cdefs.h?format=TEXT",
+      "sha256": "4878bc35038fd51f8d7b299dd079bbcaa559d241ffee777f21e4df68aee853cb"
+    },
+    {
+      "file": "types.hal",
+      "url": "https://android.googlesource.com/platform/hardware/interfaces/+/refs/tags/android-14.0.0_r1/graphics/composer/2.1/types.hal?format=TEXT",
+      "sha256": "e205dd30f5ff99445b706a901de8ebc46c379e9d7c1921d6a327ed2082cfa83d"
+    },
+    {
+      "file": "include/android/versioning.h",
+      "url": "https://android.googlesource.com/platform/bionic/+/refs/tags/android-14.0.0_r1/libc/include/android/versioning.h?format=TEXT",
+      "sha256": "df4304801ebb346193646f54560cc35163af7d819466690215ef07fbbadfc383"
+    },
+    {
+      "file": "include/android/api-level.h",
+      "url": "https://android.googlesource.com/platform/bionic/+/refs/tags/android-14.0.0_r1/libc/include/android/api-level.h?format=TEXT",
+      "sha256": "334145353f3f1d1881644de2de0b48aa31e88f41cba10201cf4801c831ef1d4b"
+    },
+    {
+      "file": "include/android/log.h",
+      "url": "https://android.googlesource.com/platform/system/logging/+/refs/tags/android-14.0.0_r1/liblog/include/android/log.h?format=TEXT",
+      "sha256": "5bc4d976e0b5ae12ffadd3f2d0a5482a734c4a920485cc4ce10df6fac95ce7c0"
+    }
+  ],
+  "buffer": [
+    {
+      "url": "https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-14.0.0_r1/libs/nativewindow/include/android/hardware_buffer.h?format=TEXT",
+      "bytes": 23977,
+      "sha256": "4be5e3cd427cd1d55c31b205f404ec6120e0c0680ecc49c2340d5e80a049aa11"
+    },
+    {
+      "url": "https://android.googlesource.com/platform/hardware/interfaces/+/refs/tags/android-14.0.0_r1/graphics/mapper/stable-c/include/android/hardware/graphics/mapper/IMapper.h?format=TEXT",
+      "bytes": 34036,
+      "sha256": "95700a47f0f8000ead58fab12e91483471e77a71994bbbfda5555d3e7bb6d405"
+    }
+  ]
+}

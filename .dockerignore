@@ -1,0 +1,6 @@
+**
+!Dockerfile
+!work
+work/**
+!work/rootfs
+!work/rootfs/**

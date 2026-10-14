@@ -1,0 +1,7 @@
+service android-hardware-media-c2-cix-hal-1-0 /vendor/bin/hw/android.hardware.media.c2@1.0-cix-service
+    class hal
+    setenv LD_LIBRARY_PATH /vendor/lib64/cix-codec
+    user mediacodec
+    group camera mediadrm drmrpc 44
+    ioprio rt 4
+    writepid /dev/cpuset/foreground/tasks

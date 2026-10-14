@@ -1,0 +1,30 @@
+Orange Pi 6 Plus ReDroid GPU/VPU adaptation
+
+New adaptation scripts and mapper5 implementation: Apache License 2.0.
+No ownership over upstream Android, Arm, CIX, Orange Pi, ReDroid, or games is claimed.
+
+src/ComposerResources.cpp and src/include/composer-resources/2.1/ComposerResources.h
+derive from Android Open Source Project hardware/interfaces android-14.0.0_r1.
+Copyright 2018/2019 The Android Open Source Project. Apache License 2.0.
+Changes: fixed-image ABI declarations, stable-C mapper5 import/free integration,
+and per-process import/free accounting. Existing AOSP cache/lifetime logic retained.
+
+src/include/IMapper.h, android/hardware_buffer.h, android/rect.h,
+android/log.h, cutils/native_handle.h retain their AOSP Apache-2.0 headers.
+Upstream URLs and original fingerprints are in config/aosp-sources.json.
+
+kernel/vendor-o-build.patch changes Linux vendor Makefiles and is GPL-2.0-only.
+See LICENSES/GPL-2.0-only.txt. It is separate from the Apache-2.0 Android adaptation.
+
+Build headers fetched into work/ retain their own upstream licenses (including
+Bionic BSD, libc++/libc++abi and Linux UAPI terms). They are not bundled in the
+source-only release. Config/header-sources.json pins their source URLs/digests.
+
+Factory Mali/Arm/CIX binaries and original factory configuration/NOTICE files
+are not included in this source-only release and are not relicensed by it.
+Local import preserves the original vendor NOTICE as NOTICE.cix-original.xml.gz.
+An AOSP open-source license is not evidence that every vendor file is freely
+redistributable. Users must review applicable terms before publishing an image.
+
+The pinned ReDroid base retains its own upstream software and notices.
+This project does not include, patch, or redistribute any game APK or user data.

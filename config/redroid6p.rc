@@ -1,0 +1,5 @@
+on post-fs-data
+    mkdir /data/gpu-mapper5-stats 0700 system system
+
+on property:sys.boot_completed=1
+    exec_background -- /vendor/bin/redroid6p-ready.sh
