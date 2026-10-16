@@ -78,3 +78,12 @@
 - 生成 `orangepi6p-redroid:14`，ARM64 镜像 ID 为 `sha256:8305671ada8dd365afdf7d3ee9e8f92d09583dce790ca55a2cebf86ab0f810da`；资源库 SHA256 为 `9fa4ab05f28efdb36293674097cf2f6f0fd01575983aae7c5f0a3f73030233f8`。从未启动的验证容器读回全部 60 份 payload，逐文件 SHA 与清单一致、owner 均为 root，基础层保留且无隐式 volume。
 - 本地证据位于 `work/image-ci-validation/`，包含完整及失败日志、镜像/导入结果、payload 清单和 `logs/image-validation.json`；取回的 11 份证据均与云端 SHA 一致。验证报告记录基础提交与六份未提交修复文件的摘要，不能将该镜像视为纯 `d195ac2` 的构建结果。
 - 本次为手动云端交叉构建，未执行正式 ARM64 CI、registry 上传、Android 启动或开发板 GPU / VPU 验收。已有运行验收仍沿用历史记录。
+
+## 2026-10-16：内核源码改为平台准备的子模块
+
+- Linux 与 components 注册为 `kernel/upstream/` 下的两个 gitlink，仍分别锁定 `f41a4f0b22c0f85a645aa207435761a0123feeaf` 与 `ba3bac4167cd5f115f3eaf4717356d2b3cb923d5`。核对 `.gitmodules`、gitlink 和 `sources.lock.json` 一致，本地已初始化且使用 `.git` 指针文件。CNB 内核任务启用子模块并保持 `remote: false`；ReDroid 镜像任务关闭子模块。
+- 移除构建脚本内的源码 fetch / checkout / 重试，保留编译器下载及固定 SHA 检查。使用现有本地对象准备源码，在 `GIT_ALLOW_PROTOCOL=file` 限制下实际运行输入验证成功；四个选定公开驱动目录的 681 份文件与此前已验证输入逐份一致。旧构建目录和源码缓存未删除。
+- 20 项内核测试通过，包括真实 Git 新克隆 workspace 的两个子模块初始化、目录及指针形式的 Git 元数据、缺失子模块/错误提交/缺失驱动目录拒绝、重复验证保留补丁、以及已有启动注册和 deb 检查。对应源码包测试额外放入未选公开目录及模拟私有目录，确认两者与 `.git` 元数据均不会进入归档；项目源码导出测试确认 populated submodule 与 work 目录在读取前就被排除。
+- 在实际新 Linux 路径临时应用 Makefile 补丁，使用隔离 `O=` 目录完成配置合并、`olddefconfig` 和 `kernelrelease` 检查，结果为 `6.6.89-cix-redroid`；结束后撤销本次测试补丁，子模块保持干净。没有重编完整内核或六个驱动。
+- 日志与报告位于 `kernel/work/logs/submodule-tests.log`、`submodule-inputs.log`、`submodule-config.log` 和 `submodule-validation.json`。CNB 两份配置通过指定校验；项目源码包保留 `.gitmodules`，不包含上游源码工作树或 Git 元数据。
+- 本轮未提交、推送或触发正式 CNB 构建，未实测新方案在平台上的缓存命中率或 GitHub 冷缓存下载成功率。子模块缓存机制依据官方文档和开源 YYDS 实现，仍需新提交的实际 Prepare 阶段验证。

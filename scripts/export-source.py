@@ -4,18 +4,26 @@
 import gzip
 import hashlib
 import io
+import os
 import re
 from pathlib import Path
 import tarfile
 from common import ROOT
 
-allowed=['README.md','LICENSE','NOTICE','Dockerfile','.dockerignore','.gitignore','.gitattributes',
+allowed=['.gitmodules','README.md','LICENSE','NOTICE','Dockerfile','.dockerignore','.gitignore','.gitattributes',
          'src','scripts','config','docs','kernel','LICENSES','.ci','.cnb','.cnb.yml']
 files=[]
 for name in allowed:
     path=ROOT/name
     if not path.exists():raise RuntimeError('Missing release entry: '+name)
-    files.extend([path] if path.is_file() else [f for f in path.rglob('*') if f.is_file()])
+    if path.is_file():
+        files.append(path)
+    else:
+        for directory, folders, names in os.walk(path, followlinks=False):
+            folders[:] = [name for name in folders if name not in ('.git', '__pycache__')
+                          and Path(directory, name).relative_to(ROOT).parts[:2]
+                          not in (('kernel', 'work'), ('kernel', 'upstream'))]
+            files.extend(Path(directory, name) for name in names)
 files=sorted(f for f in files if '__pycache__' not in f.parts and f.suffix!='.pyc'
              and f.relative_to(ROOT).parts[:2]!=('kernel','work'))
 for f in files:

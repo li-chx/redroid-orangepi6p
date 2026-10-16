@@ -54,55 +54,75 @@ class FetchTests(unittest.TestCase):
                   '--quiet', '-m', 'fixture')
         revision = fetch.run('git', '-C', upstream, 'rev-parse', 'HEAD',
                              capture_output=True, text=True).stdout.strip()
-        return {'url': upstream.as_uri(), 'commit': revision}
+        return {'url': upstream.as_uri(), 'commit': revision, 'submodule': 'upstream'}
 
-    def test_full_source_checkout_and_partial_cache_upgrade(self):
+    def test_prepared_source_accepts_git_directory_and_submodule_pointer_without_fetch(self):
         with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
             root = Path(directory)
             spec = self.source_fixture(root)
-            with patch.object(fetch, 'WORK', root / 'work'), \
-                    patch.object(fetch, 'network_git', wraps=fetch.network_git) as network:
-                target = fetch.checkout('linux', spec)
-                self.assertTrue((target / 'unrelated/other.txt').is_file())
-                self.assertIn('--no-filter', network.call_args_list[0].args)
-                (target / 'selected/input.txt').write_text('build patch\n')
-                fetch.checkout('linux', spec)
-                self.assertEqual((target / 'selected/input.txt').read_text(), 'build patch\n')
-                # Reproduce metadata retained by the old partial-fetch path.
-                fetch.run('git', '-C', target, 'config', 'remote.origin.promisor', 'true')
-                fetch.run('git', '-C', target, 'config', 'remote.origin.partialclonefilter', 'blob:none')
-                network.reset_mock()
-                fetch.checkout('linux', spec)
-                self.assertIn('--refetch', network.call_args_list[0].args)
-                self.assertEqual(fetch.run('git', '-C', target, 'config', '--bool', '--get',
-                                          'remote.origin.promisor', capture_output=True,
-                                          text=True).stdout.strip(), 'false')
-                with self.assertRaisesRegex(RuntimeError, 'different commit'):
-                    fetch.checkout('linux', dict(spec, commit='0' * 40))
+            target = root / spec['submodule']
+            with patch.object(fetch, 'KERNEL', root), patch.object(fetch, 'run', wraps=fetch.run) as run:
+                self.assertEqual(fetch.source('linux', spec), target)
+                self.assertTrue(all(call.args[3] == 'rev-parse' for call in run.call_args_list))
+            fetch.run('git', '-C', root, 'init', '--quiet')
+            fetch.run('git', '-C', root, 'submodule', 'add', spec['url'], spec['submodule'])
+            fetch.run('git', '-C', root, 'submodule', 'absorbgitdirs')
+            self.assertTrue((target / '.git').is_file())
+            (target / 'selected/input.txt').write_text('build patch\n')
+            with patch.object(fetch, 'KERNEL', root), patch.object(fetch, 'run', wraps=fetch.run) as run:
+                self.assertEqual(fetch.source('linux', spec), target)
+                self.assertTrue(all(call.args[3] == 'rev-parse' for call in run.call_args_list))
+            self.assertEqual((target / 'selected/input.txt').read_text(), 'build patch\n')
 
-    def test_component_checkout_keeps_sparse_filter(self):
+    def test_uninitialized_source_does_not_fall_back_to_parent_repository(self):
         with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
             root = Path(directory)
-            spec = dict(self.source_fixture(root), paths=['selected'])
-            with patch.object(fetch, 'WORK', root / 'work'), \
-                    patch.object(fetch, 'network_git', wraps=fetch.network_git) as network:
-                target = fetch.checkout('components', spec)
-            self.assertIn('--filter=blob:none', network.call_args_list[0].args)
-            self.assertTrue((target / 'selected/input.txt').is_file())
-            self.assertFalse((target / 'unrelated').exists())
+            spec = self.source_fixture(root)
+            with patch.object(fetch, 'KERNEL', root):
+                with self.assertRaisesRegex(RuntimeError, 'Missing kernel submodule'):
+                    fetch.source('linux', dict(spec, submodule='missing'))
+                fetch.run('git', '-C', root, 'init', '--quiet')
+                (root / 'empty').mkdir()
+                with self.assertRaisesRegex(RuntimeError, 'Missing kernel submodule'):
+                    fetch.source('linux', dict(spec, submodule='empty'))
 
-    def test_network_git_retries_checkout_and_stops_after_three_failures(self):
-        failure = subprocess.CalledProcessError(128, ['git', 'checkout'])
-        success = subprocess.CompletedProcess(['git', 'checkout'], 0)
-        with patch.object(fetch, 'run', side_effect=[failure, success]) as run, \
-                patch.object(fetch.time, 'sleep') as sleep:
-            self.assertIs(fetch.network_git(KERNEL, 'checkout', '--detach', 'fixture'), success)
-            self.assertEqual(run.call_count, 2)
-            sleep.assert_called_once_with(2)
-        with patch.object(fetch, 'run', side_effect=failure) as run, patch.object(fetch.time, 'sleep'):
-            with self.assertRaises(subprocess.CalledProcessError):
-                fetch.network_git(KERNEL, 'fetch')
-            self.assertEqual(run.call_count, 3)
+    def test_wrong_commit_and_missing_selected_directory_are_rejected(self):
+        with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+            root = Path(directory)
+            spec = self.source_fixture(root)
+            with patch.object(fetch, 'KERNEL', root):
+                with self.assertRaisesRegex(RuntimeError, 'Source commit mismatch'):
+                    fetch.source('linux', dict(spec, commit='0' * 40))
+                with self.assertRaisesRegex(RuntimeError, 'Missing selected source directory'):
+                    fetch.source('components', dict(spec, paths=['missing']))
+                self.assertEqual(fetch.source('components', dict(spec, paths=['selected'])), root / 'upstream')
+
+    def test_fresh_workspace_initializes_both_pinned_submodules(self):
+        with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+            root = Path(directory)
+            project = root / 'project'
+            project.mkdir()
+            fetch.run('git', '-C', project, 'init', '--quiet')
+            specs = {}
+            for name in ['linux', 'components']:
+                remote = root / (name + '-remote')
+                remote.mkdir()
+                specs[name] = dict(self.source_fixture(remote), submodule='upstream/' + name)
+                fetch.run('git', '-C', project, '-c', 'protocol.file.allow=always', 'submodule',
+                          'add', '--quiet', specs[name]['url'], specs[name]['submodule'])
+            fetch.run('git', '-C', project, '-c', 'user.name=Fixture', '-c',
+                      'user.email=fixture@example.invalid', 'commit', '--no-gpg-sign', '--quiet', '-m', 'pins')
+            workspace = root / 'workspace'
+            fetch.run('git', 'clone', '--quiet', project, workspace)
+            with patch.object(fetch, 'KERNEL', workspace):
+                with self.assertRaisesRegex(RuntimeError, 'Missing kernel submodule'):
+                    fetch.source('linux', specs['linux'])
+                fetch.run('git', '-C', workspace, '-c', 'protocol.file.allow=always', 'submodule',
+                          'update', '--init', '--recursive', '--force')
+                for name, spec in specs.items():
+                    target = fetch.source(name, dict(spec, paths=['selected']))
+                    self.assertTrue((target / '.git').is_file())
+                    self.assertTrue((target / 'selected/input.txt').is_file())
 
     def toolchain_fixture(self, root):
         work = root / 'work'
@@ -260,25 +280,65 @@ class BootTests(unittest.TestCase):
 
 
 class PackageTests(unittest.TestCase):
-    def test_corresponding_source_archive_excludes_git_and_owner_metadata(self):
+    def test_corresponding_source_archive_excludes_unselected_trees_git_and_owner_metadata(self):
         with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
             work = Path(directory)
-            linux = work / 'sources/linux'
-            (linux / '.git').mkdir(parents=True)
-            (linux / '.git/config').write_text('must not be distributed')
+            linux = work / 'linux'
+            linux.mkdir()
+            (linux / '.git').write_text('gitdir: private pointer')
+            (linux / 'nested/.git').mkdir(parents=True)
+            (linux / 'nested/.git/config').write_text('must not be distributed')
             (linux / 'example.c').write_text('/* source fixture */\n')
-            (work / 'sources/components/cix_opensource').mkdir(parents=True)
+            components = work / 'components'
+            for name in package.LOCK['components']['paths']:
+                selected = components / name
+                selected.mkdir(parents=True)
+                (selected / 'driver.c').write_text('/* selected driver */\n')
+            for name in ['cix_proprietary/private.c', 'cix_opensource/unrelated/private.c']:
+                unselected = components / name
+                unselected.parent.mkdir(parents=True, exist_ok=True)
+                unselected.write_text('must not be distributed')
             (work / 'build').mkdir()
             (work / 'build/.config').write_text('CONFIG_ARM64=y\n')
             target = work / 'source.tar.xz'
-            with patch.object(package, 'WORK', work), patch.dict(os.environ, {'SOURCE_DATE_EPOCH': '123'}):
+            lock = dict(package.LOCK, linux={'submodule': str(linux)},
+                        components=dict(package.LOCK['components'], submodule=str(components)))
+            with patch.object(package, 'WORK', work), patch.object(package, 'LOCK', lock), \
+                    patch.dict(os.environ, {'SOURCE_DATE_EPOCH': '123'}):
                 package.source_archive(target)
             with tarfile.open(target) as archive:
                 members = archive.getmembers()
                 self.assertFalse(any('.git' in Path(member.name).parts for member in members))
+                self.assertFalse(any('private.c' in member.name for member in members))
+                for name in lock['components']['paths']:
+                    self.assertEqual(archive.extractfile('sources/' + name + '/driver.c').read(),
+                                     b'/* selected driver */\n')
                 self.assertTrue(all(member.uid == 0 and member.gid == 0 and member.uname == ''
                                     and member.gname == '' and member.mtime == 123 for member in members))
                 self.assertEqual(archive.extractfile('build/config.final').read(), b'CONFIG_ARM64=y\n')
+
+    def test_project_export_prunes_populated_submodules_and_work_before_reading_files(self):
+        with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+            root = Path(directory)
+            for name in ['src', 'scripts', 'config', 'docs', 'kernel', 'LICENSES', '.ci', '.cnb']:
+                (root / name).mkdir()
+            for name in ['README.md', 'LICENSE', 'NOTICE', 'Dockerfile', '.dockerignore', '.gitignore',
+                         '.gitattributes', '.gitmodules', '.cnb.yml']:
+                (root / name).write_text('fixture\n')
+            project = KERNEL.parent
+            for name in ['export-source.py', 'common.py']:
+                shutil.copyfile(project / 'scripts' / name, root / 'scripts' / name)
+            (root / 'config/inputs.lock.json').write_text('{}')
+            for name in ['kernel/upstream/linux/private.c', 'kernel/upstream/components/private.so',
+                         'kernel/work/cache/private.key']:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text('-----BEGIN ' + 'RSA PRIVATE KEY-----')
+            subprocess.run([sys.executable, str(root / 'scripts/export-source.py')], check=True)
+            with tarfile.open(root / 'dist/orangepi6p-redroid-source.tar.gz') as archive:
+                names = archive.getnames()
+                self.assertIn('orangepi6p-redroid/.gitmodules', names)
+                self.assertFalse(any('/kernel/upstream/' in name or '/kernel/work/' in name for name in names))
 
     def stage(self, directory):
         stage = Path(directory) / 'stage'

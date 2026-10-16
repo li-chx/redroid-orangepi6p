@@ -9,10 +9,11 @@
 也可在 x86_64 Linux 上用 [.ci/kernel.Dockerfile](../.ci/kernel.Dockerfile) 中的依赖环境构建：
 
 ```sh
+git submodule update --init --recursive
 JOBS=8 bash kernel/build.sh
 ```
 
-脚本下载固定源码与编译器到 `kernel/work/`，合并厂商完整配置和 [redroid.config](redroid.config)，构建 Image、树内模块和 DTB，再为同一 release 重编六个厂商模块：
+Linux 和厂商组件通过 submodule 放在 `kernel/upstream/`；CNB 内核任务在准备 workspace 时拉取，本地 Git 克隆后先运行上面的初始化命令。项目源码压缩包不包含这些仓库，构建内核需使用 Git 工作树。编译器、构建产物和日志仍位于 `kernel/work/`。脚本验证源码提交，合并厂商完整配置和 [redroid.config](redroid.config)，构建 Image、树内模块和 DTB，再为同一 release 重编六个厂商模块：
 
 - `memory_group_manager`、`protected_memory_allocator`、`mali_kbase`；
 - NPU `aipu`、VPU `amvx`、ISP `armcb_isp_v4l2`。
@@ -49,11 +50,13 @@ sudo apt install ./linux-image-6.6.89-cix-redroid_*_arm64.deb
 固定输入见 [sources.lock.json](sources.lock.json)：
 
 - [Orange Pi Linux](https://github.com/orangepi-xunlong/linux-orangepi)，`orange-pi-6.6-cix` 路线，提交 `f41a4f0b22c0f85a645aa207435761a0123feeaf`。
-- [component_cix-next](https://github.com/orangepi-xunlong/component_cix-next)，提交 `ba3bac4167cd5f115f3eaf4717356d2b3cb923d5`，仅检出公开 GPU / NPU / VPU / ISP 源码。
+- [component_cix-next](https://github.com/orangepi-xunlong/component_cix-next)，提交 `ba3bac4167cd5f115f3eaf4717356d2b3cb923d5`；只构建和打包锁定清单所列的四个公开 GPU / NPU / VPU / ISP 源码目录。
 - 厂商配置基线来自此前保存的原板 `/proc/config.gz`，文件及 SHA 已固定；不能用小配置片段代替这份完整硬件基线。
 - Arm GNU Toolchain 12.3.Rel1，下载文件 SHA256 固定。工具链校验通过后使用 GNU tar / xz 解压，兼容 Debian 12 的 Python；完整解压后才发布到缓存目录。
 
-Linux 以 shallow fetch 一次下载固定提交的完整文件，避免 checkout 再按需补取；厂商组件保留 blob 过滤与稀疏检出。Git 下载和可能联网的 checkout 最多尝试三次，间隔 2、4 秒。已有的 Linux partial clone 缓存会补齐对象；重复执行保留构建补丁，并继续检查固定提交。
+[.gitmodules](../.gitmodules) 为两份源码请求 shallow clone，主仓库的 gitlink 固定确切提交，`sources.lock.json` 再次核对相同 SHA。内核流水线显式开启 `git.submodules`，设置 `remote: false`，不跟踪分支最新版本；镜像流水线关闭子模块。CNB 的 `git-clone-yyds` 在缓存准备阶段更新子模块，再创建 workspace，后续可复用缓存；冷缓存仍需访问 GitHub，不保证消除所有网络错误。参见 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git)。
+
+`fetch-sources.py` 只验证已初始化的源码、固定提交和所需驱动目录，不再执行源码 fetch / checkout / 重试。缺失子模块或提交不符时直接报错，编译器下载仍按固定 SHA 校验。构建会在 Linux 子模块中应用下述 Makefile 补丁；本地构建后 Git 显示该子模块有修改属于预期，重复构建保留且核对同一补丁。旧 `kernel/work/sources/` 缓存不再使用，也不会自动删除。
 
 [vendor-o-build.patch](vendor-o-build.patch) 修正 9 个 Realtek Makefile 中的 23 处路径，用于源码树外的 `O=` 构建，不修改 GPU / VPU 功能。构建拒绝混入其他内核源码修改。公开 GPU 的 474 份、NPU 的 45 份 C/头文件/构建文件，已与原实验使用源码逐项比对一致。
 

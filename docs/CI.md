@@ -54,6 +54,10 @@ python3 scripts/check-runtime.py
 
 内核流水线固定生成 **`6.6.89-cix-redroid`**，包含树内模块、六个厂商外置模块和本板 DTB。它校验 ARM64 架构、完整 vermagic、Mali 依赖顺序及真实 deb 归档内容，并将对应的内核/驱动源码与最终配置一起打包。
 
+Linux 与厂商组件由 [.gitmodules](../.gitmodules) 注册为固定提交的子模块，放在 `kernel/upstream/`。内核任务开启 `git.submodules: { enable: true, remote: false }`，由 CNB 准备 workspace 时下载并利用平台缓存，构建步骤只核对提交，不再自行拉 GitHub；ReDroid 镜像任务明确关闭子模块。冷缓存首次下载仍依赖上游网络。行为依据 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git) 与 [git-clone-yyds](https://cnb.cool/cnb/cool/git-clone-yyds)。
+
+对应源码包只收录已打补丁的 Linux 和锁定清单中的四个公开驱动目录，排除组件仓库的其他源码和 Git 元数据；项目源码包保留 `.gitmodules`，排除整个 `kernel/upstream/` 和 `kernel/work/`。本地构建入口见 [内核 README](../kernel/README.md)。
+
 在开发板上解开外层 TAR 后执行：
 
 ```sh

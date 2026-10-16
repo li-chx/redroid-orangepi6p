@@ -134,8 +134,12 @@ def source_archive(destination):
         member.mtime = epoch
         return member
     with tarfile.open(destination, 'w:xz', preset=1) as archive:
-        archive.add(WORK / 'sources/linux', arcname='sources/linux', filter=normalize)
-        archive.add(WORK / 'sources/components/cix_opensource', arcname='sources/cix_opensource', filter=normalize)
+        archive.add(KERNEL / LOCK['linux']['submodule'], arcname='sources/linux', filter=normalize)
+        # Platform checkout may contain the entire component repository, including
+        # unrelated or proprietary trees. Ship only the four selected driver trees.
+        for name in LOCK['components']['paths']:
+            archive.add(KERNEL / LOCK['components']['submodule'] / name,
+                        arcname='sources/' + name, filter=normalize)
         for name in ['sources.lock.json', 'redroid.config', 'vendor-o-build.patch', 'configs', 'debian',
                      'fetch-sources.py', 'build.sh', 'package.py', 'README.md']:
             archive.add(KERNEL / name, arcname='build/' + name, filter=normalize)

@@ -21,8 +21,8 @@ export SOURCE_DATE_EPOCH
 export KBUILD_BUILD_USER=builder KBUILD_BUILD_HOST=cnb KBUILD_BUILD_VERSION=1
 KBUILD_BUILD_TIMESTAMP=$(date -u -d "@$SOURCE_DATE_EPOCH" '+%a %b %d %T UTC %Y')
 export KBUILD_BUILD_TIMESTAMP
-src="$work/sources/linux"
-components="$work/sources/components/cix_opensource"
+src="$kernel/upstream/linux"
+components="$kernel/upstream/components/cix_opensource"
 out="$work/build"
 stage="$work/stage"
 cross="$work/toolchains/arm-gnu-toolchain-12.3.rel1-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-"
@@ -48,7 +48,7 @@ else:
     subprocess.run(['git', '-C', src, 'apply', '--check', patch], check=True)
     subprocess.run(['git', '-C', src, 'apply', patch], check=True)
 PY
-git -C "$work/sources/components" diff --exit-code HEAD
+git -C "$kernel/upstream/components" diff --exit-code HEAD
 cp "$kernel/configs/vendor-6.6.89-cix.config" "$out/.config"
 "$src/scripts/kconfig/merge_config.sh" -m -O "$out" "$out/.config" "$kernel/redroid.config"
 "$src/scripts/config" --file "$out/.config" --set-str LOCALVERSION '-cix-redroid' --disable LOCALVERSION_AUTO

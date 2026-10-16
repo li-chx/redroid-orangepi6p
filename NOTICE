@@ -40,7 +40,10 @@ kernel/configs/vendor-6.6.89-cix.config is a saved, generated configuration of t
 factory 6.6.89-cix kernel, included as a hardware baseline. The MIT grant does
 not relicense upstream kernel or driver material.
 kernel/sources.lock.json pins the Linux and component_cix-next repositories.
-Downloaded Linux and GPU/NPU/VPU/ISP sources retain all original copyright and
+The submodules under kernel/upstream/ retain their upstream terms; neither that
+directory nor any upstream license files are covered by the root MIT grant.
+The project source-only export excludes populated submodule working trees.
+Linux and GPU/NPU/VPU/ISP sources retain all original copyright and
 license declarations. Kernel binary bundles include the corresponding patched
 Linux and open-source driver sources, final configuration and build scripts.
 Their licenses are separate from the MIT build and boot-registration tools.

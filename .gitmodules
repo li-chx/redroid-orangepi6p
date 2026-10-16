@@ -1,0 +1,8 @@
+[submodule "kernel/upstream/linux"]
+	path = kernel/upstream/linux
+	url = https://github.com/orangepi-xunlong/linux-orangepi.git
+	shallow = true
+[submodule "kernel/upstream/components"]
+	path = kernel/upstream/components
+	url = https://github.com/orangepi-xunlong/component_cix-next.git
+	shallow = true
