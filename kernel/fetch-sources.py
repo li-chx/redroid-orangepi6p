@@ -34,9 +34,15 @@ def source(name, spec):
     actual = run('git', '-C', target, 'rev-parse', 'HEAD', capture_output=True, text=True).stdout.strip()
     if actual != spec['commit']:
         raise RuntimeError(f'Source commit mismatch: {name}; update the pinned submodule')
-    for path in spec.get('paths', []):
+    paths = spec.get('paths', [])
+    for path in paths:
         if not (target / path).is_dir():
             raise RuntimeError(f'Missing selected source directory: {name}/{path}')
+    if paths:
+        # A complete component submodule also contains unrelated LFS binaries.
+        # Only these locked driver trees are built and shipped in the source bundle.
+        run('git', '-C', target, 'diff', '--no-ext-diff', '--no-textconv',
+            '--exit-code', 'HEAD', '--', *paths)
     return target
 
 

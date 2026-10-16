@@ -48,7 +48,7 @@ else:
     subprocess.run(['git', '-C', src, 'apply', '--check', patch], check=True)
     subprocess.run(['git', '-C', src, 'apply', patch], check=True)
 PY
-git -C "$kernel/upstream/components" diff --exit-code HEAD
+# fetch-sources.py already checked the four selected component driver trees.
 cp "$kernel/configs/vendor-6.6.89-cix.config" "$out/.config"
 "$src/scripts/kconfig/merge_config.sh" -m -O "$out" "$out/.config" "$kernel/redroid.config"
 "$src/scripts/config" --file "$out/.config" --set-str LOCALVERSION '-cix-redroid' --disable LOCALVERSION_AUTO

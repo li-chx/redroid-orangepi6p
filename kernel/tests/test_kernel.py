@@ -97,6 +97,35 @@ class FetchTests(unittest.TestCase):
                     fetch.source('components', dict(spec, paths=['missing']))
                 self.assertEqual(fetch.source('components', dict(spec, paths=['selected'])), root / 'upstream')
 
+    def test_unrelated_component_binary_changes_do_not_block_selected_driver_sources(self):
+        with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+            root = Path(directory)
+            spec = dict(self.source_fixture(root), paths=['selected'])
+            target = root / spec['submodule']
+            # Reproduce a full checkout whose unused binary differs from the Git blob.
+            (target / 'unrelated/other.txt').write_bytes(b'\x00unused materialized binary\xff')
+            whole_tree = subprocess.run(['git', '-C', str(target), 'diff', '--exit-code', 'HEAD'],
+                                        capture_output=True)
+            self.assertEqual(whole_tree.returncode, 1)
+            with patch.object(fetch, 'KERNEL', root):
+                self.assertEqual(fetch.source('components', spec), target)
+            self.assertEqual((target / 'unrelated/other.txt').read_bytes(),
+                             b'\x00unused materialized binary\xff')
+
+    def test_selected_component_changes_are_rejected_in_worktree_and_index(self):
+        for staged in [False, True]:
+            with self.subTest(staged=staged), \
+                    tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+                root = Path(directory)
+                spec = dict(self.source_fixture(root), paths=['selected'])
+                target = root / spec['submodule']
+                (target / 'selected/input.txt').write_text('changed driver source\n')
+                if staged:
+                    fetch.run('git', '-C', target, 'add', 'selected/input.txt')
+                with patch.object(fetch, 'KERNEL', root):
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        fetch.source('components', spec)
+
     def test_fresh_workspace_initializes_both_pinned_submodules(self):
         with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
             root = Path(directory)

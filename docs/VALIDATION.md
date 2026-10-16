@@ -87,3 +87,10 @@
 - 在实际新 Linux 路径临时应用 Makefile 补丁，使用隔离 `O=` 目录完成配置合并、`olddefconfig` 和 `kernelrelease` 检查，结果为 `6.6.89-cix-redroid`；结束后撤销本次测试补丁，子模块保持干净。没有重编完整内核或六个驱动。
 - 日志与报告位于 `kernel/work/logs/submodule-tests.log`、`submodule-inputs.log`、`submodule-config.log` 和 `submodule-validation.json`。CNB 两份配置通过指定校验；项目源码包保留 `.gitmodules`，不包含上游源码工作树或 Git 元数据。
 - 本轮未提交、推送或触发正式 CNB 构建，未实测新方案在平台上的缓存命中率或 GitHub 冷缓存下载成功率。子模块缓存机制依据官方文档和开源 YYDS 实现，仍需新提交的实际 Prepare 阶段验证。
+
+## 2026-10-16：组件完整检出的修改检查范围
+
+- 用户提供的 19:49:54 CI 日志已通过两份子模块校验与编译器准备，随后在全组件仓库 `git diff --exit-code HEAD` 处失败，列出五份未参与构建的二进制。它们全部位于上游 `.gitattributes` 的 LFS 路径中；日志没有提供 Prepare 与构建容器的完整过滤器配置，因此不将具体的 LFS 处理差异写成已确认原因。
+- 移除遗留的全组件仓库修改检查，在 `fetch-sources.py` 中按锁定清单对四个实际构建、打包的公开驱动目录检查相对 HEAD 的差异，并禁用外部 diff 与 textconv。固定提交检查保留，选定源码的暂存/未暂存修改仍拒绝，不覆盖或清理无关二进制。
+- 22 项内核测试通过。新增真实 Git 回归检查复现“未使用二进制变化使旧全仓检查退出 1”，而修复后的输入检查通过且保留该文件；另验证实际驱动的暂存、未暂存修改都被拒绝。实际固定子模块与缓存编译器输入检查通过，日志位于 `kernel/work/logs/component-scope-tests.log` 和 `component-scope-inputs.log`。
+- 本轮没有修改流水线配置、重新编译完整内核或在线重跑 CI；这些检查不代表后续编译、制品上传或板端启动已通过。

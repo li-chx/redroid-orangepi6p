@@ -58,6 +58,8 @@ sudo apt install ./linux-image-6.6.89-cix-redroid_*_arm64.deb
 
 `fetch-sources.py` 只验证已初始化的源码、固定提交和所需驱动目录，不再执行源码 fetch / checkout / 重试。缺失子模块或提交不符时直接报错，编译器下载仍按固定 SHA 校验。构建会在 Linux 子模块中应用下述 Makefile 补丁；本地构建后 Git 显示该子模块有修改属于预期，重复构建保留且核对同一补丁。旧 `kernel/work/sources/` 缓存不再使用，也不会自动删除。
 
+组件源码的修改检查限定为 `sources.lock.json` 中实际构建和打包的四个公开驱动目录，暂存或未暂存的驱动修改都会拒绝。完整组件仓库中的无关 deb、闭源库等可能因 LFS 文件处理而显示差异；这些文件不参与内核构建，其差异不作为构建失败条件，也不会被重置或打包。
+
 [vendor-o-build.patch](vendor-o-build.patch) 修正 9 个 Realtek Makefile 中的 23 处路径，用于源码树外的 `O=` 构建，不修改 GPU / VPU 功能。构建拒绝混入其他内核源码修改。公开 GPU 的 474 份、NPU 的 45 份 C/头文件/构建文件，已与原实验使用源码逐项比对一致。
 
 历史实机验收的 release 是 `6.6.89-cix-redroid2`，对应验证记录保留原名；改用新 release 后的构建和打包不自动继承“已在开发板启动”的结论。已有内核具备所需功能的使用者可以只构建 ReDroid 镜像。固件与源代码的原始逐位对应关系仍有限制，不用 CI 构建替换板上固件。
