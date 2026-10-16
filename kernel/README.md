@@ -51,7 +51,7 @@ sudo apt install ./linux-image-6.6.89-cix-redroid_*_arm64.deb
 - [Orange Pi Linux](https://github.com/orangepi-xunlong/linux-orangepi)，`orange-pi-6.6-cix` 路线，提交 `f41a4f0b22c0f85a645aa207435761a0123feeaf`。
 - [component_cix-next](https://github.com/orangepi-xunlong/component_cix-next)，提交 `ba3bac4167cd5f115f3eaf4717356d2b3cb923d5`，仅检出公开 GPU / NPU / VPU / ISP 源码。
 - 厂商配置基线来自此前保存的原板 `/proc/config.gz`，文件及 SHA 已固定；不能用小配置片段代替这份完整硬件基线。
-- Arm GNU Toolchain 12.3.Rel1，下载文件 SHA256 固定。
+- Arm GNU Toolchain 12.3.Rel1，下载文件 SHA256 固定。工具链校验通过后使用 GNU tar / xz 解压，兼容 Debian 12 的 Python；完整解压后才发布到缓存目录。
 
 [vendor-o-build.patch](vendor-o-build.patch) 修正 9 个 Realtek Makefile 中的 23 处路径，用于源码树外的 `O=` 构建，不修改 GPU / VPU 功能。构建拒绝混入其他内核源码修改。公开 GPU 的 474 份、NPU 的 45 份 C/头文件/构建文件，已与原实验使用源码逐项比对一致。
 

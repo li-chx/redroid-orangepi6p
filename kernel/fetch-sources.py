@@ -5,7 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
-import tarfile
+import tempfile
 import urllib.request
 
 KERNEL = Path(__file__).resolve().parent
@@ -65,9 +65,17 @@ def toolchain():
         raise RuntimeError('Toolchain archive SHA256 mismatch')
     if not target.exists():
         target.parent.mkdir(parents=True, exist_ok=True)
-        with tarfile.open(archive) as source:
-            # Python's data filter checks paths, ownership and symlink targets.
-            source.extractall(target.parent, filter='data')
+        # Debian 12's original Python 3.11 lacks tarfile extraction filters.
+        # Use GNU tar only after the pinned archive's SHA256 check, preserving
+        # compiler executable bits and internal links without adopting owners.
+        # Publish only a complete extraction, so failures are safe to retry.
+        with tempfile.TemporaryDirectory(dir=target.parent, prefix='.extract-') as temporary:
+            run('tar', '--extract', '--xz', '--file', archive,
+                '--directory', temporary, '--no-same-owner')
+            extracted = Path(temporary) / spec['directory']
+            if not (extracted / 'bin' / (spec['prefix'] + 'gcc')).is_file():
+                raise RuntimeError('Toolchain archive is missing its compiler')
+            extracted.rename(target)
     compiler = target / 'bin' / (spec['prefix'] + 'gcc')
     run(compiler, '--version')
 

@@ -23,6 +23,7 @@ def load(name, path):
 
 boot = load('boot', KERNEL / 'debian/boot.py')
 package = load('kernel_package', KERNEL / 'package.py')
+fetch = load('kernel_fetch', KERNEL / 'fetch-sources.py')
 ROOT_UUID = '11111111-2222-3333-4444-555555555555'
 FACTORY = f'''set default=0
 set timeout=5
@@ -36,6 +37,60 @@ menuentry '1 OrangePi 6 Plus (Device Tree)' {{
     linux /Image acpi=off root=PARTUUID={ROOT_UUID} rootwait rw
 }}
 '''
+
+
+class FetchTests(unittest.TestCase):
+    def toolchain_fixture(self, root):
+        work = root / 'work'
+        archive = work / 'downloads/fixture.tar.xz'
+        archive.parent.mkdir(parents=True)
+        source = root / 'fixture/bin'
+        source.mkdir(parents=True)
+        compiler = source / 'test-gcc'
+        compiler.write_text('#!/bin/sh\nprintf "fixture compiler\\n"\n')
+        compiler.chmod(0o755)
+        (source / 'compiler-link').symlink_to('test-gcc')
+        with tarfile.open(archive, 'w:xz') as stream:
+            stream.add(source.parent, arcname='fixture')
+        spec = {'directory': 'fixture', 'prefix': 'test-', 'sha256': fetch.sha256(archive)}
+        return work, archive, spec
+
+    def test_toolchain_extracts_without_python_filter_api(self):
+        with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+            work, archive, spec = self.toolchain_fixture(Path(directory))
+            with patch.object(fetch, 'WORK', work), patch.object(fetch, 'LOCK', {'toolchain': spec}), \
+                    patch.object(tarfile.TarFile, 'extractall', side_effect=TypeError('filter unsupported')):
+                fetch.toolchain()
+                fetch.toolchain()  # Reuse a complete toolchain.
+            binary = work / 'toolchains/fixture/bin'
+            self.assertTrue(os.access(binary / 'test-gcc', os.X_OK))
+            self.assertTrue((binary / 'compiler-link').is_symlink())
+            self.assertEqual((binary / 'compiler-link').read_bytes(), (binary / 'test-gcc').read_bytes())
+            self.assertFalse(list((work / 'toolchains').glob('.extract-*')))
+
+    def test_toolchain_hash_mismatch_prevents_extraction(self):
+        with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+            work, archive, spec = self.toolchain_fixture(Path(directory))
+            archive.write_bytes(b'corrupt download')
+            with patch.object(fetch, 'WORK', work), patch.object(fetch, 'LOCK', {'toolchain': spec}):
+                with self.assertRaisesRegex(RuntimeError, 'SHA256 mismatch'):
+                    fetch.toolchain()
+            self.assertFalse((work / 'toolchains').exists())
+
+    def test_failed_toolchain_extraction_does_not_publish_partial_directory(self):
+        with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+            work, archive, spec = self.toolchain_fixture(Path(directory))
+            def fail_extract(*args, **kwargs):
+                extraction = Path(args[args.index('--directory') + 1]) / 'fixture'
+                extraction.mkdir()
+                (extraction / 'incomplete').touch()
+                raise subprocess.CalledProcessError(2, ['tar'])
+            with patch.object(fetch, 'WORK', work), patch.object(fetch, 'LOCK', {'toolchain': spec}), \
+                    patch.object(fetch, 'run', side_effect=fail_extract):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    fetch.toolchain()
+            self.assertEqual(list((work / 'toolchains').iterdir()), [])
+
 
 
 class BootTests(unittest.TestCase):
