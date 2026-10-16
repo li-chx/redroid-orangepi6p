@@ -1,0 +1,8 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+set -eu
+case "$1" in
+    remove) python3 /usr/lib/orangepi6p-redroid-kernel/boot.py remove ;;
+    upgrade|deconfigure|failed-upgrade) ;;
+    *) echo "Unknown prerm action: $1" >&2; exit 1 ;;
+esac

@@ -1,0 +1,28 @@
+{
+  "release": "6.6.89-cix-redroid",
+  "linux": {
+    "url": "https://github.com/orangepi-xunlong/linux-orangepi.git",
+    "commit": "f41a4f0b22c0f85a645aa207435761a0123feeaf"
+  },
+  "components": {
+    "url": "https://github.com/orangepi-xunlong/component_cix-next.git",
+    "commit": "ba3bac4167cd5f115f3eaf4717356d2b3cb923d5",
+    "paths": [
+      "cix_opensource/gpu/gpu_kernel",
+      "cix_opensource/npu/npu_driver/driver",
+      "cix_opensource/vpu/vpu_driver",
+      "cix_opensource/isp/isp_driver"
+    ]
+  },
+  "toolchain": {
+    "url": "https://developer.arm.com/-/media/Files/downloads/gnu/12.3.rel1/binrel/arm-gnu-toolchain-12.3.rel1-x86_64-aarch64-none-linux-gnu.tar.xz",
+    "sha256": "960ec0bce309528f603639d8228ef39e6fb9185289ff42b01aa3b4de315accef",
+    "directory": "arm-gnu-toolchain-12.3.rel1-x86_64-aarch64-none-linux-gnu",
+    "prefix": "aarch64-none-linux-gnu-"
+  },
+  "base_config": {
+    "path": "configs/vendor-6.6.89-cix.config",
+    "sha256": "ccc9594be48be9a8c4f53794b1f0cf95ca6eb0225c0702765474d42136a2d7ea",
+    "provenance": "Saved /proc/config.gz from the original Orange Pi 6 Plus 6.6.89-cix Debian host; no machine-specific paths or partition IDs."
+  }
+}

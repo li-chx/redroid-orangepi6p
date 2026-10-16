@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """Board terminal GPU/VPU monitor; read-only unless --enable-vpu is explicit.
 The optional VPU statistics switch is restored on normal exit, Ctrl+C, TERM/HUP.
 """

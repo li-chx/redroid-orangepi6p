@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 """Create a source-only archive using a whitelist, never a workspace-wide copy."""
 import gzip
 import hashlib
@@ -10,13 +10,14 @@ import tarfile
 from common import ROOT
 
 allowed=['README.md','LICENSE','NOTICE','Dockerfile','.dockerignore','.gitignore','.gitattributes',
-         'src','scripts','config','docs','kernel','LICENSES']
+         'src','scripts','config','docs','kernel','LICENSES','.ci','.cnb','.cnb.yml']
 files=[]
 for name in allowed:
     path=ROOT/name
     if not path.exists():raise RuntimeError('Missing release entry: '+name)
     files.extend([path] if path.is_file() else [f for f in path.rglob('*') if f.is_file()])
-files=sorted(f for f in files if '__pycache__' not in f.parts and f.suffix!='.pyc')
+files=sorted(f for f in files if '__pycache__' not in f.parts and f.suffix!='.pyc'
+             and f.relative_to(ROOT).parts[:2]!=('kernel','work'))
 for f in files:
     if f.is_symlink() or f.suffix in ('.so','.o','.img','.apk','.7z','.tar'):
         raise RuntimeError('Unexpected non-source release entry: '+str(f))

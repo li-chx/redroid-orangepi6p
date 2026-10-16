@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """Read a raw, single-device Android super partition; optionally extract one FS.
 
 Format reference: AOSP android-14.0.0_r1 liblp/metadata_format.h.

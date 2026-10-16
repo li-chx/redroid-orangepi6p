@@ -1,0 +1,11 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+set -eu
+case "$1" in
+    configure)
+        depmod -a 6.6.89-cix-redroid
+        python3 /usr/lib/orangepi6p-redroid-kernel/boot.py install
+        ;;
+    abort-upgrade|abort-remove|abort-deconfigure) ;;
+    *) echo "Unknown postinst action: $1" >&2; exit 1 ;;
+esac

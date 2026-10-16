@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 """Functional video test ONLY on a fresh, empty instance, with project-local outputs."""
 import argparse
 import json

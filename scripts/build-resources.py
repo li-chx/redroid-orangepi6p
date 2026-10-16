@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 """Rebuild the fixed-image mapper5 ComposerResources ABI from source."""
 import argparse
 import platform

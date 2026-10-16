@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT
 bool ComposerHandleImporter::init() {
     std::lock_guard<std::mutex> lock(gMapperLock);
     if (gMapper) return true;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 """Read a pinned official .7z/.img; extract vendor without mounts or device writes."""
 import argparse
 from pathlib import Path

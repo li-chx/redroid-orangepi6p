@@ -4,3 +4,6 @@
 work/**
 !work/rootfs
 !work/rootfs/**
+# CNB builds its dependency environments from these Dockerfiles.
+!.ci
+!.ci/*.Dockerfile

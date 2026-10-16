@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 """Read-only host prerequisites; does not install modules or change boot settings."""
 import gzip
 import json

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
 """Read a primary GPT from a disk image, including trimmed vendor images."""
 import argparse
 import json

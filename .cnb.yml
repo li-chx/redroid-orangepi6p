@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: MIT
+$:
+  web_trigger_redroid:
+    - name: redroid-image
+      runner:
+        tags: cnb:arch:arm64:v8
+        cpus: 8
+      docker:
+        build:
+          dockerfile: .ci/redroid.Dockerfile
+          by: [.ci/redroid.Dockerfile]
+      services: [docker]
+      # For a credential-bearing download URL, import VENDOR_ARCHIVE_URL from
+      # a CNB secret repository here instead of using the public URL form field.
+      stages:
+        - name: Download pinned factory archive
+          script: python3 scripts/download-vendor.py
+        - name: Import factory and base image
+          script: |
+            set -eu
+            python3 scripts/extract-vendor.py work/downloads/Orangepi6plus_1.0.1_android14_linux6.1.44.7z
+            python3 scripts/prepare.py --vendor-dir work/extract/vendor
+            rm -rf work/extract work/downloads
+        - name: Build ReDroid image
+          script: |
+            set -eu
+            python3 scripts/fetch-headers.py
+            python3 scripts/build-resources.py
+            python3 scripts/image.py
+        - name: Push image to project Docker registry
+          script: |
+            set -eu
+            : "${CNB_DOCKER_REGISTRY:?Missing CNB Docker registry}"
+            : "${CNB_REPO_SLUG_LOWERCASE:?Missing CNB repository path}"
+            : "${CNB_BUILD_ID:?Missing CNB build ID}"
+            : "${CNB_TOKEN:?Missing CNB build credential}"
+            repository="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/redroid"
+            mkdir -p work/tmp
+            registry_auth_dir=$(mktemp -d "$PWD/work/tmp/registry-auth.XXXXXX")
+            export DOCKER_CONFIG="$registry_auth_dir"
+            trap 'rm -rf "$registry_auth_dir"' EXIT
+            printf '%s' "$CNB_TOKEN" | docker login "$CNB_DOCKER_REGISTRY" --username cnb --password-stdin
+            docker tag orangepi6p-redroid:14 "${repository}:build-${CNB_BUILD_ID}"
+            docker push "${repository}:build-${CNB_BUILD_ID}"
+            docker tag orangepi6p-redroid:14 "${repository}:14"
+            docker push "${repository}:14"
+            printf 'Published: %s\n' "${repository}:build-${CNB_BUILD_ID}" "${repository}:14"
+
+  web_trigger_kernel:
+    - name: kernel-deb
+      runner:
+        tags: cnb:arch:amd64
+        cpus: 16
+      docker:
+        build:
+          dockerfile: .ci/kernel.Dockerfile
+          by: [.ci/kernel.Dockerfile]
+      env:
+        JOBS: "16"
+      stages:
+        - name: Check boot registration and deb packaging
+          script: python3 kernel/tests/test_kernel.py
+        - name: Build kernel and six vendor modules
+          timeout: 12h
+          script: bash kernel/build.sh
+        - name: Bundle deb, corresponding source and checksums
+          script: tar -C dist/kernel -cf "dist/kernel-${CNB_BUILD_ID}.tar" .
+        - name: Upload kernel bundle to this commit
+          image: cnbcool/attachments:latest
+          settings:
+            type: UPLOAD
+            commit: $CNB_COMMIT
+            attachments: ["dist/kernel-*.tar"]
+            ttl: 7

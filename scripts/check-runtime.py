@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 """Finite boot, Mali and Codec2 checks; never restarts an instance."""
 import argparse
 import json

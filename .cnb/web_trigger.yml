@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MIT
+branch:
+  - reg: ".*"
+    buttons:
+      - name: 构建 ReDroid 镜像
+        description: 构建 ARM64 镜像并推送到当前项目的 Docker 制品库。
+        event: web_trigger_redroid
+        inputs:
+          VENDOR_ARCHIVE_URL:
+            name: 官方 Android 镜像 HTTPS 直链
+            description: 只在此输入不含凭据的公开直链；签名地址请使用密钥仓库 imports。
+            type: input
+            required: true
+      - name: 构建内核 deb
+        description: 构建 6.6.89-cix-redroid、六个厂商模块和可自动注册启动项的 Debian 安装包。
+        event: web_trigger_kernel

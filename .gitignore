@@ -1,6 +1,7 @@
 /work/
 /data/
 /dist/
+/kernel/work/
 __pycache__/
 *.pyc
 *.7z

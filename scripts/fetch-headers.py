@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 """Fetch pinned Android14 build headers; cache and outputs stay under work/."""
 import base64
 import json

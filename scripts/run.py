@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 """Launch a fresh project-bound instance; never replaces or stops another container."""
 import argparse
 import ipaddress
@@ -12,7 +12,7 @@ import sys
 from common import ROOT,WORK,run,image_info
 
 parser=argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--image',default='orangepi6p-redroid:14-gpu-vpu')
+parser.add_argument('--image',default='orangepi6p-redroid:14')
 parser.add_argument('--name',default='redroid')
 parser.add_argument('--bind',default='127.0.0.1',help='ADB listen IPv4; LAN use must be explicit')
 parser.add_argument('--port',type=int,default=5555)
