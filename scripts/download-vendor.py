@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Fetch the pinned factory archive from a URL held in an environment variable."""
+"""Fetch the pinned vendor resource bundle from a URL in an environment variable."""
 import argparse
 import hashlib
 import http.client
+import json
 import os
 import urllib.parse
 import urllib.request
 
-from common import LOCK, WORK, checked
+from common import ROOT, WORK, checked
+
+BUNDLE = json.loads((ROOT / 'config/vendor-bundle.lock.json').read_text())
 
 
 class HTTPSRedirects(urllib.request.HTTPRedirectHandler):
@@ -18,7 +21,7 @@ class HTTPSRedirects(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def download(url, destination, expected):
+def download(url, destination, expected, maximum=128 * 1024**2):
     parts = urllib.parse.urlsplit(url)
     if parts.scheme != 'https' or not parts.netloc or parts.username or parts.password:
         raise ValueError('Use a direct HTTPS URL without embedded login credentials')
@@ -36,8 +39,8 @@ def download(url, destination, expected):
         with opener.open(url, timeout=120) as response, partial.open('xb') as output:
             while block := response.read(8 * 1024**2):
                 size += len(block)
-                if size > 2 * 1024**3:
-                    raise ValueError('Download exceeds the limit for the pinned archive')
+                if size > maximum:
+                    raise ValueError('Download exceeds the limit for the pinned bundle')
                 digest.update(block)
                 output.write(block)
         if digest.hexdigest() != expected:
@@ -53,14 +56,14 @@ def main():
     args = parser.parse_args()
     url = os.environ.get(args.url_env, '').strip()
     if not url:
-        parser.error(f'Set {args.url_env} to the factory archive direct HTTPS URL')
-    destination = WORK / 'downloads' / LOCK['vendor_archive']
+        parser.error(f'Set {args.url_env} to the vendor tar.gz direct HTTPS URL')
+    destination = WORK / 'downloads' / BUNDLE['filename']
     try:
-        download(url, destination, LOCK['archive_sha256'])
+        download(url, destination, BUNDLE['sha256'], maximum=BUNDLE['bytes'])
     except (OSError, ValueError, RuntimeError, http.client.HTTPException):
         # Signed URLs can contain credentials: do not include the URL or exception text.
-        raise SystemExit('Factory download failed. Check the HTTPS source, quota and pinned SHA256.') from None
-    print('Verified factory archive:', destination.name)
+        raise SystemExit('Vendor bundle download failed. Check the HTTPS source and pinned SHA256.') from None
+    print('Verified vendor bundle:', destination.name)
 
 
 if __name__ == '__main__':

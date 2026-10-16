@@ -5,7 +5,7 @@
 ## 如何使用
 
 1. 将本仓库上传至 CNB，打开分支页面的手动构建入口。
-2. 选择需要的构建按钮。ReDroid 需要填官方 Android 镜像的公开 HTTPS 直链；内核构建不需要这个文件。
+2. 选择需要的构建按钮。ReDroid 需要填 Android 14 厂商资源包的公开 HTTPS 直链；内核构建不需要这个文件。
 3. ReDroid 构建完成后，在项目的 **制品库 → Docker → redroid** 查看镜像；内核构建结果仍在当前提交的附件中，文件名 `kernel-<构建ID>.tar`，保留 7 天。
 
 两条流水线按需独立运行，不在普通 push 或 PR 时自动构建，也不连接开发板。ReDroid 使用 ARM64 节点，内核在 amd64 节点上使用固定的 Arm GCC 12.3 工具链交叉编译。依赖预装在 [.ci/](../.ci/) 的构建环境 Dockerfile 中，CNB 可缓存这些环境。
@@ -14,7 +14,15 @@
 
 ## ReDroid 镜像
 
-按钮中的 `VENDOR_ARCHIVE_URL` 必须直接返回 `Orangepi6plus_1.0.1_android14_linux6.1.44.7z`。可以使用自己存放官方原文件的公开地址；Google Drive 分享页面、需要浏览器确认或登录的页面不适用。脚本按 `config/inputs.lock.json` 校验 SHA256，不接受其他版本。
+按钮中的 `VENDOR_ARCHIVE_URL` 继续手动填写，内容改为 `orangepi6p-android14-vendor-1.0.1.tar.gz` 资源包的 HTTPS 下载直链。例如：
+
+```text
+https://cnb.cool/li_chx/Orangepi6plus-redroid-android-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz
+```
+
+资源包约 23.8MB，只包含所需的 48 份原厂文件及来源/声明/清单，不需要完整官方刷机镜像。该 Release 的 [SHA256 文件](https://cnb.cool/li_chx/Orangepi6plus-redroid-android-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz.sha256) 供手动核对；CI 只需填写压缩包链接，预期 SHA256 固定在 [vendor-bundle.lock.json](../config/vendor-bundle.lock.json)，不会把远端校验文件当作新的信任来源。
+
+流水线先运行导入检查，再下载并验证整个包，通过显式路径白名单导入、核对包内清单及 [inputs.lock.json](../config/inputs.lock.json) 的逐文件 SHA256，然后执行原有 prepare/源码编译/镜像构建。解包完成的原始文件位于 `work/vendor-input/`；源码版本和摘要不匹配会拒绝，新的资源包版本需要同时更新仓库中的锁定信息。输入 URL 可以更换到内容一致的镜像地址，不写死在流水线中。
 
 表单不是密钥存储，含签名或凭据的 URL 应放入 [CNB 密钥仓库](https://docs.cnb.cool/zh/repo/secret.md)，并在 `.cnb.yml` 的 ReDroid Pipeline 中通过 `imports` 导入 `VENDOR_ARCHIVE_URL`；同时移除按钮中的必填 URL 输入。下载脚本不会主动打印 URL，产物也不记录 URL。
 

@@ -22,11 +22,11 @@ python3 scripts/check-host.py
 
 也可使用 [CNB 流水线构建并推送到项目制品库](docs/CI.md)，在开发板上拉取使用；以下为本地构建方式。
 
-从 [Orange Pi 官方下载入口](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/service-and-support/Orange-Pi-6-Plus.html) 获取 `Orangepi6plus_1.0.1_android14_linux6.1.44.7z`，放入 `work/downloads/`，然后执行：
+下载 [Android 14 厂商资源包](https://cnb.cool/li_chx/Orangepi6plus-redroid-android-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz)（约 23.8MB），放入 `work/downloads/`，然后执行：
 
 ```sh
-python3 scripts/extract-vendor.py work/downloads/Orangepi6plus_1.0.1_android14_linux6.1.44.7z
-python3 scripts/prepare.py --vendor-dir work/extract/vendor
+python3 scripts/import-vendor-bundle.py
+python3 scripts/prepare.py --vendor-dir work/vendor-input
 python3 scripts/fetch-headers.py
 python3 scripts/build-resources.py
 python3 scripts/image.py

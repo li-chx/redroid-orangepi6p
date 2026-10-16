@@ -26,7 +26,9 @@ Orange Pi 6 Plus / CIX P1 的 Android 14 ReDroid 适配。使用厂商 Mali EGL/
 
 构建需已有 `clang++`、GNU ARM64 linker（ARM64机器用`ld`，x86_64交叉构建用`aarch64-linux-gnu-ld`）、Docker。直接解析官方压缩镜像还需 `7z`、`debugfs`。这些工具的安装由使用者在自己的系统上决定。
 
-官方镜像也可从 [Google Drive Android 目录](https://drive.google.com/drive/folders/1EGJKdZ1V4Vool18J6SyG0NVudSerBD7A) 查找，文件可能受下载配额限制。
+日常构建使用约 23.8MB 的原始厂商资源包，包含 48 个文件；`download-vendor.py` 接收 URL，按 `vendor-bundle.lock.json` 固定摘要校验，`import-vendor-bundle.py` 白名单导入后仍按原始清单逐份验证。入口见 [CI 说明](CI.md)。
+
+需要从完整官方镜像重新提取时，可从 [Orange Pi 官方下载入口](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/service-and-support/Orange-Pi-6-Plus.html) 或 [Google Drive Android 目录](https://drive.google.com/drive/folders/1EGJKdZ1V4Vool18J6SyG0NVudSerBD7A) 查找，文件可能受下载配额限制。将锁定的 `.7z` 放入 `work/downloads/`，执行 `python3 scripts/extract-vendor.py work/downloads/Orangepi6plus_1.0.1_android14_linux6.1.44.7z`，再用 `python3 scripts/prepare.py --vendor-dir work/extract/vendor` 导入；该原包入口保留供维护与溯源。
 
 已有提取的官方 `vendor/` 时直接给 `--vendor-dir`，不必重复解整张镜像。`prepare.py`创建一个**不启动的**基础容器，读取链接依赖/manifest后删除；验证确切image ID及文件SHA。已有同一基础镜像的本地标签可显式传 `--base-image <tag>`，ID不同会拒绝。
 

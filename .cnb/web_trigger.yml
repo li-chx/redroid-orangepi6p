@@ -7,8 +7,8 @@ branch:
         event: web_trigger_redroid
         inputs:
           VENDOR_ARCHIVE_URL:
-            name: 官方 Android 镜像 HTTPS 直链
-            description: 只在此输入不含凭据的公开直链；签名地址请使用密钥仓库 imports。
+            name: Android 14 厂商资源包 HTTPS 直链
+            description: 填写 orangepi6p-android14-vendor-1.0.1.tar.gz 的公开直链；签名地址请使用密钥仓库 imports。
             type: input
             required: true
       - name: 构建内核 deb
