@@ -3,31 +3,41 @@
     "url": "https://android.googlesource.com/platform/external/libcxx/+archive/refs/tags/android-14.0.0_r1/include.tar.gz",
     "file": "libcxx.tar.gz",
     "sha256": "87126a89150a1dbcf14c55a10dcc756c47ba5e3c5d0d1bc01fa7c44d3220bb94",
-    "size": 564851
+    "size": 564851,
+    "tree_sha256": "4cc090c3fe4d6f62b3a4b045c19fe8f597a9014a53a56716a119d1a7f12484f1",
+    "regular_files": 182
   },
   {
     "url": "https://android.googlesource.com/platform/bionic/+archive/refs/tags/android-14.0.0_r1/libc/include.tar.gz",
     "file": "bionic.tar.gz",
     "sha256": "497117ab277b510853ea3f5eb3799705aa10164ca35e108896c26307e0175c1f",
-    "size": 192572
+    "size": 192572,
+    "tree_sha256": "a85fc0ce551d31f93a7a9193994021bd385ebd6b55553b528a2d4cb446caf637",
+    "regular_files": 225
   },
   {
     "url": "https://android.googlesource.com/platform/bionic/+archive/refs/tags/android-14.0.0_r1/libc/kernel/uapi.tar.gz",
     "file": "kernel-uapi.tar.gz",
     "sha256": "75b9e00bdcaa1d1faa90b7ac0e52bd242f12f262cf71da4ce624e74013e449a8",
-    "size": 730750
+    "size": 730750,
+    "tree_sha256": "19e4f00294e2489778b8039f2732e15f4d138d2eb6838f47cd7325abce73c957",
+    "regular_files": 1091
   },
   {
     "url": "https://android.googlesource.com/platform/bionic/+archive/refs/tags/android-14.0.0_r1/libc/kernel/uapi/asm-arm64.tar.gz",
     "file": "arm64-uapi.tar.gz",
     "sha256": "333a6c2d96bbfde940b83575432fba33a763167ab5e364690e987dbaf207dbd8",
-    "size": 8186
+    "size": 8186,
+    "tree_sha256": "c56e91dbcf318fb970480cbbe61a7bcf06243c9187e84f4e17ec11a4c909971c",
+    "regular_files": 37
   },
   {
     "url": "https://android.googlesource.com/platform/bionic/+archive/refs/tags/android-14.0.0_r1/libc/kernel/android.tar.gz",
     "file": "kernel-android.tar.gz",
     "sha256": "c5843d138836a91640c7aef613044ed67cf6bf89212ea9136f05fec5a58ab5d7",
-    "size": 5976
+    "size": 5976,
+    "tree_sha256": "baea3836fec1c18659a8a7c05af4ff802f04afaf52004a39fcca053099e3c41a",
+    "regular_files": 9
   },
   {
     "url": "https://android.googlesource.com/platform/external/libcxxabi/+/refs/tags/android-14.0.0_r1/include/__cxxabi_config.h?format=TEXT",

@@ -35,6 +35,10 @@ def base_image(ref):
     if result.returncode:
         run('docker','pull','--platform=linux/arm64',ref)
     info = image_info(ref)
-    if info['Id'] != LOCK['base_image_id'] or info['Architecture'] != 'arm64' or info['Config'].get('Volumes'):
+    # Classic stores identify an image by its config digest. Docker's containerd
+    # store can report the manifest digest instead; both identify this pinned
+    # baseline. Keep the platform and implicit-volume checks in either case.
+    expected_ids = {LOCK['base_image_id'], LOCK['base_image'].rsplit('@', 1)[1]}
+    if info['Id'] not in expected_ids or info['Architecture'] != 'arm64' or info['Config'].get('Volumes'):
         raise RuntimeError('Base image differs from the pinned, volume-free ARM64 baseline')
     return info

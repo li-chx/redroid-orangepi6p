@@ -30,9 +30,11 @@ Orange Pi 6 Plus / CIX P1 的 Android 14 ReDroid 适配。使用厂商 Mali EGL/
 
 需要从完整官方镜像重新提取时，可从 [Orange Pi 官方下载入口](http://www.orangepi.org/html/hardWare/computerAndMicrocontrollers/service-and-support/Orange-Pi-6-Plus.html) 或 [Google Drive Android 目录](https://drive.google.com/drive/folders/1EGJKdZ1V4Vool18J6SyG0NVudSerBD7A) 查找，文件可能受下载配额限制。将锁定的 `.7z` 放入 `work/downloads/`，执行 `python3 scripts/extract-vendor.py work/downloads/Orangepi6plus_1.0.1_android14_linux6.1.44.7z`，再用 `python3 scripts/prepare.py --vendor-dir work/extract/vendor` 导入；该原包入口保留供维护与溯源。
 
-已有提取的官方 `vendor/` 时直接给 `--vendor-dir`，不必重复解整张镜像。`prepare.py`创建一个**不启动的**基础容器，读取链接依赖/manifest后删除；验证确切image ID及文件SHA。已有同一基础镜像的本地标签可显式传 `--base-image <tag>`，ID不同会拒绝。
+已有提取的官方 `vendor/` 时直接给 `--vendor-dir`，不必重复解整张镜像。`prepare.py`创建一个**不启动的**基础容器，读取链接依赖/manifest后删除；验证锁定的镜像身份及文件SHA。Docker 传统存储返回 config digest，测试中的 Docker 29 containerd 存储返回 manifest digest，因此只接受锁定基线的这两个确切 ID，同时要求 ARM64 且没有隐式 volume。已有同一基础镜像的本地标签可显式传 `--base-image <tag>`。
 
 源码编译仅用固定Android14头和基础镜像Bionic/libc++，不用宿主glibc/libstdc++；不是要求下载完整AOSP。头文件从上游按摘要下载至`work/cache/`。可指定 `build-resources.py --cxx <clang++> --ld <ARM64-GNU-ld>`；x86_64交叉构建和ARM64 Docker构建可分开，复制本地产生的`work/rootfs/`到目标板后运行`image.py`即可。
+
+[header-sources.json](../config/header-sources.json) 中的五份头文件归档按 `tree_sha256` 和 `regular_files` 校验：对每个普通文件计算 SHA256，将“相对路径 → 文件摘要”映射按键排序，以无额外空格的 JSON 编码后再计算 SHA256，同时核对文件数。固定值由此前整包 SHA 已验证的本地归档生成；允许上游重新打包时改变 tar/gzip 元信息，文件名或内容变化仍会拒绝。归档的原始 `sha256` / `size` 保留作来源记录，单独下载的 ABI 头仍直接校验文件 SHA。只写入验证通过的普通文件，跳过链接，拒绝越界和重复路径；新下载验证成功后才进入缓存。
 
 最终本地镜像为 `orangepi6p-redroid:14`。Docker构建上下文只包含Dockerfile和明确列出的生成payload；`work/image-result.json`记录ID，`work/payload-manifest.json`记录每个安装文件。构建只使用COPY，无系统软件安装步骤。
 

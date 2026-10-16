@@ -13,8 +13,12 @@ $:
       # For a credential-bearing download URL, import VENDOR_ARCHIVE_URL from
       # a CNB secret repository here instead of using the public URL form field.
       stages:
-        - name: Check vendor bundle import
-          script: python3 scripts/tests/test_vendor_bundle.py
+        - name: Check build inputs and image compatibility
+          script: |
+            set -eu
+            python3 scripts/tests/test_vendor_bundle.py
+            python3 scripts/tests/test_headers.py
+            python3 scripts/tests/test_images.py
         - name: Download pinned vendor resource bundle
           script: python3 scripts/download-vendor.py
         - name: Import vendor bundle and base image

@@ -22,7 +22,7 @@ https://cnb.cool/li_chx/Orangepi6plus-redroid-android-vendor/-/releases/download
 
 资源包约 23.8MB，只包含所需的 48 份原厂文件及来源/声明/清单，不需要完整官方刷机镜像。该 Release 的 [SHA256 文件](https://cnb.cool/li_chx/Orangepi6plus-redroid-android-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz.sha256) 供手动核对；CI 只需填写压缩包链接，预期 SHA256 固定在 [vendor-bundle.lock.json](../config/vendor-bundle.lock.json)，不会把远端校验文件当作新的信任来源。
 
-流水线先运行导入检查，再下载并验证整个包，通过显式路径白名单导入、核对包内清单及 [inputs.lock.json](../config/inputs.lock.json) 的逐文件 SHA256，然后执行原有 prepare/源码编译/镜像构建。解包完成的原始文件位于 `work/vendor-input/`；源码版本和摘要不匹配会拒绝，新的资源包版本需要同时更新仓库中的锁定信息。输入 URL 可以更换到内容一致的镜像地址，不写死在流水线中。
+流水线先运行资源包导入、头文件内容校验和 Docker 镜像身份兼容检查，共 12 项测试，再下载并验证整个包，通过显式路径白名单导入、核对包内清单及 [inputs.lock.json](../config/inputs.lock.json) 的逐文件 SHA256，然后执行原有 prepare/源码编译/镜像构建。解包完成的原始文件位于 `work/vendor-input/`；源码版本和摘要不匹配会拒绝，新的资源包版本需要同时更新仓库中的锁定信息。输入 URL 可以更换到内容一致的镜像地址，不写死在流水线中。
 
 表单不是密钥存储，含签名或凭据的 URL 应放入 [CNB 密钥仓库](https://docs.cnb.cool/zh/repo/secret.md)，并在 `.cnb.yml` 的 ReDroid Pipeline 中通过 `imports` 导入 `VENDOR_ARCHIVE_URL`；同时移除按钮中的必填 URL 输入。下载脚本不会主动打印 URL，产物也不记录 URL。
 
