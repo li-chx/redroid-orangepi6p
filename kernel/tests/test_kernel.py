@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT
-"""Isolated boot-registration and real deb-archive checks; never install a package."""
+"""Isolated input-fetch, boot-registration and deb-archive checks; never install a package."""
 import importlib.util
 import os
 from pathlib import Path
@@ -40,6 +40,70 @@ menuentry '1 OrangePi 6 Plus (Device Tree)' {{
 
 
 class FetchTests(unittest.TestCase):
+    def source_fixture(self, root):
+        upstream = root / 'upstream'
+        upstream.mkdir()
+        for name in ['selected/input.txt', 'unrelated/other.txt']:
+            path = upstream / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(name + '\n')
+        fetch.run('git', '-C', upstream, 'init', '--quiet')
+        fetch.run('git', '-C', upstream, 'add', '.')
+        fetch.run('git', '-C', upstream, '-c', 'user.name=Fixture',
+                  '-c', 'user.email=fixture@example.invalid', 'commit', '--no-gpg-sign',
+                  '--quiet', '-m', 'fixture')
+        revision = fetch.run('git', '-C', upstream, 'rev-parse', 'HEAD',
+                             capture_output=True, text=True).stdout.strip()
+        return {'url': upstream.as_uri(), 'commit': revision}
+
+    def test_full_source_checkout_and_partial_cache_upgrade(self):
+        with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+            root = Path(directory)
+            spec = self.source_fixture(root)
+            with patch.object(fetch, 'WORK', root / 'work'), \
+                    patch.object(fetch, 'network_git', wraps=fetch.network_git) as network:
+                target = fetch.checkout('linux', spec)
+                self.assertTrue((target / 'unrelated/other.txt').is_file())
+                self.assertIn('--no-filter', network.call_args_list[0].args)
+                (target / 'selected/input.txt').write_text('build patch\n')
+                fetch.checkout('linux', spec)
+                self.assertEqual((target / 'selected/input.txt').read_text(), 'build patch\n')
+                # Reproduce metadata retained by the old partial-fetch path.
+                fetch.run('git', '-C', target, 'config', 'remote.origin.promisor', 'true')
+                fetch.run('git', '-C', target, 'config', 'remote.origin.partialclonefilter', 'blob:none')
+                network.reset_mock()
+                fetch.checkout('linux', spec)
+                self.assertIn('--refetch', network.call_args_list[0].args)
+                self.assertEqual(fetch.run('git', '-C', target, 'config', '--bool', '--get',
+                                          'remote.origin.promisor', capture_output=True,
+                                          text=True).stdout.strip(), 'false')
+                with self.assertRaisesRegex(RuntimeError, 'different commit'):
+                    fetch.checkout('linux', dict(spec, commit='0' * 40))
+
+    def test_component_checkout_keeps_sparse_filter(self):
+        with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+            root = Path(directory)
+            spec = dict(self.source_fixture(root), paths=['selected'])
+            with patch.object(fetch, 'WORK', root / 'work'), \
+                    patch.object(fetch, 'network_git', wraps=fetch.network_git) as network:
+                target = fetch.checkout('components', spec)
+            self.assertIn('--filter=blob:none', network.call_args_list[0].args)
+            self.assertTrue((target / 'selected/input.txt').is_file())
+            self.assertFalse((target / 'unrelated').exists())
+
+    def test_network_git_retries_checkout_and_stops_after_three_failures(self):
+        failure = subprocess.CalledProcessError(128, ['git', 'checkout'])
+        success = subprocess.CompletedProcess(['git', 'checkout'], 0)
+        with patch.object(fetch, 'run', side_effect=[failure, success]) as run, \
+                patch.object(fetch.time, 'sleep') as sleep:
+            self.assertIs(fetch.network_git(KERNEL, 'checkout', '--detach', 'fixture'), success)
+            self.assertEqual(run.call_count, 2)
+            sleep.assert_called_once_with(2)
+        with patch.object(fetch, 'run', side_effect=failure) as run, patch.object(fetch.time, 'sleep'):
+            with self.assertRaises(subprocess.CalledProcessError):
+                fetch.network_git(KERNEL, 'fetch')
+            self.assertEqual(run.call_count, 3)
+
     def toolchain_fixture(self, root):
         work = root / 'work'
         archive = work / 'downloads/fixture.tar.xz'
@@ -90,8 +154,6 @@ class FetchTests(unittest.TestCase):
                 with self.assertRaises(subprocess.CalledProcessError):
                     fetch.toolchain()
             self.assertEqual(list((work / 'toolchains').iterdir()), [])
-
-
 
 class BootTests(unittest.TestCase):
     def test_failed_initial_install_can_be_removed_on_unsupported_host(self):

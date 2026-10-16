@@ -53,6 +53,8 @@ sudo apt install ./linux-image-6.6.89-cix-redroid_*_arm64.deb
 - 厂商配置基线来自此前保存的原板 `/proc/config.gz`，文件及 SHA 已固定；不能用小配置片段代替这份完整硬件基线。
 - Arm GNU Toolchain 12.3.Rel1，下载文件 SHA256 固定。工具链校验通过后使用 GNU tar / xz 解压，兼容 Debian 12 的 Python；完整解压后才发布到缓存目录。
 
+Linux 以 shallow fetch 一次下载固定提交的完整文件，避免 checkout 再按需补取；厂商组件保留 blob 过滤与稀疏检出。Git 下载和可能联网的 checkout 最多尝试三次，间隔 2、4 秒。已有的 Linux partial clone 缓存会补齐对象；重复执行保留构建补丁，并继续检查固定提交。
+
 [vendor-o-build.patch](vendor-o-build.patch) 修正 9 个 Realtek Makefile 中的 23 处路径，用于源码树外的 `O=` 构建，不修改 GPU / VPU 功能。构建拒绝混入其他内核源码修改。公开 GPU 的 474 份、NPU 的 45 份 C/头文件/构建文件，已与原实验使用源码逐项比对一致。
 
 历史实机验收的 release 是 `6.6.89-cix-redroid2`，对应验证记录保留原名；改用新 release 后的构建和打包不自动继承“已在开发板启动”的结论。已有内核具备所需功能的使用者可以只构建 ReDroid 镜像。固件与源代码的原始逐位对应关系仍有限制，不用 CI 构建替换板上固件。
