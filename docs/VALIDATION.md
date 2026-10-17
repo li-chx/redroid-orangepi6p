@@ -120,3 +120,9 @@
 - 提交 `52c099f5d467b35a018ffb8d24acbfc6e0223895` 的内核流水线 [cnb-u9c-1k53v2noi](https://cnb.cool/li_chx/redroid-orangepi6p/-/build/logs/cnb-u9c-1k53v2noi) 成功完成准备、测试、完整内核与六个厂商模块编译、打包和上传。
 - 原始提交附件 `kernel-cnb-u9c-1k53v2noi.tar` 为 224,409,600 字节，SHA256 为 `4b3f721c9287a245116f20c992ec52337a190f7dcab5d194c0741151aeda5148`；下载后核对外层和包内全部 10 项校验值。`build-info.json` 中的源提交、构建 ID 和 vendor 快照提交与构建一致，记录模块总数 951。
 - Release 标签 `kernel-6.6.89-cix-redroid-20261017` 指向上述构建提交，保留原始附件和外层 SHA256 文件。CI 成功不等于开发板启动或 GPU/VPU 实机验收。
+
+
+## 配套镜像的 CI 发布（2026-10-17）
+
+- 同一提交 `52c099f` 的镜像流水线 [cnb-9rb-1k53vpcv5](https://cnb.cool/li_chx/redroid-orangepi6p/-/build/logs/cnb-9rb-1k53vpcv5) 成功，Docker 制品库确认 `14` 与 `build-cnb-9rb-1k53vpcv5` 均为 ARM64 镜像，digest 为 `sha256:988411f51474ab25b2c5953dad7be5dd35ffb6f42ced3724d155be620c1f9308`。
+- 地址为 `docker.cnb.cool/li_chx/redroid-orangepi6p/redroid`。流水线与制品标签关联到上述源码提交；这次没有运行新的开发板 Android / GPU / VPU 实测。

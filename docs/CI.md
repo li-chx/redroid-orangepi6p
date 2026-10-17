@@ -37,14 +37,17 @@ ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/redroid:build-${CNB_BUILD_ID}
 
 `14` 表示 Android 14，随每次成功的手动构建更新；`build-<构建ID>` 用于选定某次构建。镜像不再导出为流水线附件。源码提交记录在镜像的 `org.opencontainers.image.revision` 标签中，许可文件位于镜像内 `/vendor/etc/orangepi6p-redroid/`。
 
-在 Debian ARM64 开发板克隆本项目源码，然后拉取镜像。下列地址中的 `<组织>/<仓库>` 替换为实际 CNB 项目路径：
+本仓库已有 ARM64 镜像可用：`docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14`。固定本次发布可使用 `build-cnb-9rb-1k53vpcv5` 标签（提交 `52c099f`）。
+
+在 Debian ARM64 开发板克隆本项目源码，然后拉取镜像。当前仓库为私有仓库，Git 和 Docker 均需使用有访问权限的凭据。下面给出本项目实际地址；自己的 Fork 应改用自己的项目路径：
 
 ```sh
-git clone https://cnb.cool/<组织>/<仓库>.git orangepi6p-redroid
+git clone https://cnb.cool/li_chx/redroid-orangepi6p.git orangepi6p-redroid
 cd orangepi6p-redroid
-docker pull docker.cnb.cool/<组织>/<仓库>/redroid:14
+docker login docker.cnb.cool --username cnb
+docker pull docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
 python3 scripts/check-host.py
-python3 scripts/run.py --image docker.cnb.cool/<组织>/<仓库>/redroid:14
+python3 scripts/run.py --image docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
 python3 scripts/check-runtime.py
 ```
 

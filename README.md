@@ -74,13 +74,60 @@ JOBS=8 bash kernel/build.sh
 </details>
 </details>
 
-### 2. 构建镜像
+### 2. 拉取 ReDroid 镜像
 
-也可使用 [CNB 流水线构建并推送到项目制品库](docs/CI.md)，在开发板上拉取使用；以下为本地构建方式。
-
-下载 [Android 14 厂商资源包](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz)（约 23.8MB），放入 `work/downloads/`，然后执行：
+在开发板上安装 Git、Docker 和 Python 3，克隆本项目取得启动与检查脚本（无需递归拉取内核快照）：
 
 ```sh
+git clone https://cnb.cool/li_chx/redroid-orangepi6p.git
+cd redroid-orangepi6p
+```
+
+本仓库为私有仓库；使用有权限的 CNB 账号克隆，并先登录 Docker 制品库，密码输入具有制品读取权限的 CNB 访问令牌：
+
+```sh
+docker login docker.cnb.cool --username cnb
+docker pull docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
+```
+
+`14` 会随成功构建更新。需要固定本次发布的镜像时，使用 `docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:build-cnb-9rb-1k53vpcv5`；镜像平台为 `linux/arm64`。
+
+<details>
+<summary>自行使用 CNB CI 构建镜像</summary>
+
+1. 打开本仓库或自己的 CNB Fork 的 **main 分支详情页**，点击 **构建 ReDroid 镜像**。
+2. 在 `VENDOR_ARCHIVE_URL` 中填写下面的公开资源包直链：
+
+   ```text
+   https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz
+   ```
+
+3. 构建成功后，在当前项目的 **制品库 → Docker → redroid** 获取镜像地址。自己的 Fork 应把 `your-org/your-repo` 替换为实际组织与仓库路径：
+
+   ```sh
+   docker pull docker.cnb.cool/your-org/your-repo/redroid:14
+   ```
+
+CI 在 ARM64 节点运行，自动校验固定资源包、编译适配库并推送 `14` 和 `build-<构建ID>` 两个标签。无需先在 CI 构建内核；开发板运行时仍需满足宿主内核要求。详细配置见 [CI 文档](docs/CI.md#redroid-镜像)。
+
+</details>
+
+<details>
+<summary>手动构建镜像：Debian / Ubuntu ARM64 + Docker</summary>
+
+在 ARM64 Linux 上准备 Docker、Python 3、Clang 和 GNU linker。使用项目 Git 工作树，不需要初始化内核 submodule：
+
+```sh
+sudo apt-get update
+sudo apt-get install --no-install-recommends \
+  ca-certificates git python3 clang binutils gzip tar
+```
+
+Docker 需已安装、服务可用，且当前用户能执行 `docker info`。然后下载并校验约 23.8 MB 的固定厂商资源包，导入资源，编译适配库并构建本地镜像：
+
+```sh
+export VENDOR_ARCHIVE_URL='https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz'
+python3 scripts/download-vendor.py
 python3 scripts/import-vendor-bundle.py
 python3 scripts/prepare.py --vendor-dir work/vendor-input
 python3 scripts/fetch-headers.py
@@ -88,18 +135,41 @@ python3 scripts/build-resources.py
 python3 scripts/image.py
 ```
 
-完成后得到本地镜像 `orangepi6p-redroid:14`。
+完成后得到本地镜像 `orangepi6p-redroid:14`。使用它启动时，将下一节的 `--image` 参数改为 `orangepi6p-redroid:14`。下载、解包和编译中间文件位于 `work/`，无需下载完整官方刷机镜像；固定资源包的校验值见 [锁定清单](config/vendor-bundle.lock.json)。
+
+<details>
+<summary>在 x86_64 Linux 构建，或推送到自己的制品库</summary>
+
+x86_64 Debian / Ubuntu 还需安装 ARM64 GNU linker，并确保 Docker 能拉取、创建和导出 ARM64 基础镜像：
+
+```sh
+sudo apt-get install binutils-aarch64-linux-gnu
+```
+
+`build-resources.py` 自动使用 `aarch64-linux-gnu-ld`；其余步骤与上面相同。当前构建脚本通过导出基础镜像和无 `RUN` 指令的 Dockerfile 打包，无需启动 Android 容器。实际运行与验证仍在开发板上完成。
+
+如需发布到自己有写权限的 CNB 项目，构建完成后将 `your-org/your-repo` 替换为目标项目路径并执行：
+
+```sh
+docker login docker.cnb.cool --username cnb
+docker tag orangepi6p-redroid:14 docker.cnb.cool/your-org/your-repo/redroid:14
+docker push docker.cnb.cool/your-org/your-repo/redroid:14
+```
+
+</details>
+</details>
 
 ### 3. 启动并连接
 
 在开发板上启动并检查 Android：
 
 ```sh
-python3 scripts/run.py
+python3 scripts/check-host.py
+python3 scripts/run.py --image docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
 python3 scripts/check-runtime.py
 ```
 
-默认容器名 `redroid`，显示为 1920×1080，ADB 地址为 `127.0.0.1:5555`。在开发板本机连接：
+连接端需安装 ADB 和 scrcpy。默认容器名 `redroid`，显示为 1920×1080，ADB 地址为 `127.0.0.1:5555`。在开发板本机连接：
 
 ```sh
 adb connect 127.0.0.1:5555
@@ -109,7 +179,7 @@ scrcpy -s 127.0.0.1:5555 --video-encoder=c2.cix.avc.encoder -b 32M --max-fps=60
 若从另一台电脑连接，启动时将上面的 `run.py` 命令换成下列命令，仅在可信局域网使用；连接端将 `127.0.0.1` 换成开发板 IP：
 
 ```sh
-python3 scripts/run.py --bind 0.0.0.0 --port 5555
+python3 scripts/run.py --image docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14 --bind 0.0.0.0 --port 5555
 ```
 
 应用数据保存在 `data/redroid/`。已有容器用 `docker start redroid` 启动、`docker stop redroid` 停止，无需重复运行 `run.py`。保留应用数据时不要删除该目录。
