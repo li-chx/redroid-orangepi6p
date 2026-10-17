@@ -54,9 +54,9 @@ python3 scripts/check-runtime.py
 
 内核流水线固定生成 **`6.6.89-cix-redroid`**，包含树内模块、六个厂商外置模块和本板 DTB。它校验 ARM64 架构、完整 vermagic、Mali 依赖顺序及真实 deb 归档内容，并将对应的内核/驱动源码与最终配置一起打包。
 
-Linux 与厂商组件由 [.gitmodules](../.gitmodules) 中的一个 `kernel/upstream` submodule 提供，指向 [CNB vendor 仓库](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor) 的固定快照提交。`linux/` 的完整 Git tree 和 `components/` 的四棵公开驱动 tree 与原先锁定的上游版本一致；快照不含嵌套 submodule，因此冷缓存首次准备源码也无需访问 GitHub。内核任务保留 `git.submodules: { enable: true, remote: false }`，构建步骤校验快照提交、来源清单及 tree ID；ReDroid 镜像任务仍关闭子模块。Arm 编译器下载单独按固定 URL 和 SHA256 处理。行为依据 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git)。
+Linux 与厂商组件由 [.gitmodules](../.gitmodules) 中的一个 `kernel/vendor-snapshot` submodule 提供，指向 [CNB vendor 仓库](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor) 的固定快照提交。`linux/` 的完整 Git tree 和 `components/` 的四棵公开驱动 tree 与原先锁定的上游版本一致；快照不含嵌套 submodule，因此冷缓存首次准备源码也无需访问 GitHub。内核任务保留 `git.submodules: { enable: true, remote: false }`，构建步骤校验快照提交、来源清单及 tree ID；ReDroid 镜像任务仍关闭子模块。Arm 编译器下载单独按固定 URL 和 SHA256 处理。行为依据 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git)。
 
-对应源码包只收录已打补丁的 Linux 和锁定清单中的四个公开驱动目录，附带 vendor 快照来源清单，排除其他源码和 Git 元数据；项目源码包保留 `.gitmodules`，排除整个 `kernel/upstream/` 和 `kernel/work/`。本地构建入口见 [内核 README](../kernel/README.md)。
+对应源码包只收录已打补丁的 Linux 和锁定清单中的四个公开驱动目录，附带 vendor 快照来源清单，排除其他源码和 Git 元数据；项目源码包保留 `.gitmodules`，排除整个 `kernel/vendor-snapshot/` 和 `kernel/work/`。本地构建入口见 [内核 README](../kernel/README.md)。
 
 在开发板上解开外层 TAR 后执行：
 

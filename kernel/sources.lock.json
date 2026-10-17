@@ -3,13 +3,13 @@
   "snapshot": {
     "url": "https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor.git",
     "commit": "46c0c4c46fc2461f2bb4c537b0beb851fe782ba7",
-    "submodule": "upstream",
+    "submodule": "vendor-snapshot",
     "manifest": "snapshot.json"
   },
   "linux": {
     "url": "https://github.com/orangepi-xunlong/linux-orangepi.git",
     "commit": "f41a4f0b22c0f85a645aa207435761a0123feeaf",
-    "directory": "upstream/linux",
+    "directory": "vendor-snapshot/linux",
     "tree": "cd1e9fb433ab67c27dea245f77162ab46f7744d4"
   },
   "components": {
@@ -21,7 +21,7 @@
       "cix_opensource/vpu/vpu_driver",
       "cix_opensource/isp/isp_driver"
     ],
-    "directory": "upstream/components",
+    "directory": "vendor-snapshot/components",
     "trees": {
       "cix_opensource/gpu/gpu_kernel": "336926db9c59f83caafd5d90c7888abbc9b0b44c",
       "cix_opensource/npu/npu_driver/driver": "8665d1daa7a7b7de1974c866b9f9220f30f6926f",

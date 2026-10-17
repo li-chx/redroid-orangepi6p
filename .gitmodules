@@ -1,4 +1,4 @@
-[submodule "kernel/upstream"]
-	path = kernel/upstream
+[submodule "kernel/vendor-snapshot"]
+	path = kernel/vendor-snapshot
 	url = https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor.git
 	shallow = true

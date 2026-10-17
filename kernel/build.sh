@@ -21,8 +21,8 @@ export SOURCE_DATE_EPOCH
 export KBUILD_BUILD_USER=builder KBUILD_BUILD_HOST=cnb KBUILD_BUILD_VERSION=1
 KBUILD_BUILD_TIMESTAMP=$(date -u -d "@$SOURCE_DATE_EPOCH" '+%a %b %d %T UTC %Y')
 export KBUILD_BUILD_TIMESTAMP
-src="$kernel/upstream/linux"
-components="$kernel/upstream/components/cix_opensource"
+src="$kernel/vendor-snapshot/linux"
+components="$kernel/vendor-snapshot/components/cix_opensource"
 out="$work/build"
 stage="$work/stage"
 cross="$work/toolchains/arm-gnu-toolchain-12.3.rel1-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-"
@@ -31,7 +31,7 @@ km=(make -C "$src" O="$out" ARCH=arm64 CROSS_COMPILE="$cross" LOCALVERSION=)
 mkdir -p "$out"
 
 # Reject unrelated local source changes and apply only the pinned O= patch.
-python3 - "$kernel/upstream" "$kernel/vendor-o-build.patch" <<'PY'
+python3 - "$kernel/vendor-snapshot" "$kernel/vendor-o-build.patch" <<'PY'
 from pathlib import Path
 import subprocess, sys
 root, patch = sys.argv[1:]

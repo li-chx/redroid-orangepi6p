@@ -42,7 +42,7 @@ menuentry '1 OrangePi 6 Plus (Device Tree)' {{
 
 class FetchTests(unittest.TestCase):
     def source_fixture(self, root):
-        vendor = root / 'upstream'
+        vendor = root / 'vendor-snapshot'
         vendor.mkdir()
         for name in ['linux/selected/input.txt', 'linux/unrelated/other.txt', 'components/selected/driver.c',
                      'components/unrelated/other.txt']:
@@ -57,11 +57,11 @@ class FetchTests(unittest.TestCase):
             return fetch.run('git', '-C', vendor, 'rev-parse', tree + ':' + path,
                              capture_output=True, text=True).stdout.strip()
         specs = {
-            'snapshot': {'url': vendor.as_uri(), 'submodule': 'upstream', 'manifest': 'snapshot.json'},
+            'snapshot': {'url': vendor.as_uri(), 'submodule': 'vendor-snapshot', 'manifest': 'snapshot.json'},
             'linux': {'url': 'https://example.invalid/linux.git', 'commit': '1' * 40,
-                      'directory': 'upstream/linux', 'tree': subtree('linux')},
+                      'directory': 'vendor-snapshot/linux', 'tree': subtree('linux')},
             'components': {'url': 'https://example.invalid/components.git', 'commit': '2' * 40,
-                           'directory': 'upstream/components', 'paths': ['selected'],
+                           'directory': 'vendor-snapshot/components', 'paths': ['selected'],
                            'trees': {'selected': subtree('components/selected')}},
         }
         (vendor / 'snapshot.json').write_text(json.dumps({
@@ -80,14 +80,14 @@ class FetchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
             root = Path(directory)
             specs = self.source_fixture(root)
-            vendor = root / 'upstream'
+            vendor = root / 'vendor-snapshot'
             with patch.object(fetch, 'KERNEL', root), patch.object(fetch, 'LOCK', specs), \
                     patch.object(fetch, 'run', wraps=fetch.run) as run:
                 self.assertEqual(fetch.source('linux', specs['linux']), vendor / 'linux')
                 self.assertFalse(any('fetch' in call.args or 'checkout' in call.args
                                      for call in run.call_args_list))
             fetch.run('git', '-C', root, 'init', '--quiet')
-            fetch.run('git', '-C', root, 'submodule', 'add', specs['snapshot']['url'], 'upstream')
+            fetch.run('git', '-C', root, 'submodule', 'add', specs['snapshot']['url'], 'vendor-snapshot')
             fetch.run('git', '-C', root, 'submodule', 'absorbgitdirs')
             self.assertTrue((vendor / '.git').is_file())
             (vendor / 'linux/selected/input.txt').write_text('build patch\n')
@@ -128,7 +128,7 @@ class FetchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
             root = Path(directory)
             specs = self.source_fixture(root)
-            (root / 'upstream/snapshot.json').write_text('{}\n')
+            (root / 'vendor-snapshot/snapshot.json').write_text('{}\n')
             with patch.object(fetch, 'KERNEL', root), patch.object(fetch, 'LOCK', specs):
                 with self.assertRaises(subprocess.CalledProcessError):
                     fetch.source('linux', specs['linux'])
@@ -137,11 +137,11 @@ class FetchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
             root = Path(directory)
             specs = self.source_fixture(root)
-            unused = root / 'upstream/components/unrelated/other.txt'
+            unused = root / 'vendor-snapshot/components/unrelated/other.txt'
             unused.write_bytes(b'\x00unused materialized binary\xff')
             with patch.object(fetch, 'KERNEL', root), patch.object(fetch, 'LOCK', specs):
                 self.assertEqual(fetch.source('components', specs['components']),
-                                 root / 'upstream/components')
+                                 root / 'vendor-snapshot/components')
             self.assertEqual(unused.read_bytes(), b'\x00unused materialized binary\xff')
 
     def test_selected_component_changes_are_rejected_in_worktree_and_index(self):
@@ -150,7 +150,7 @@ class FetchTests(unittest.TestCase):
                     tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
                 root = Path(directory)
                 specs = self.source_fixture(root)
-                vendor = root / 'upstream'
+                vendor = root / 'vendor-snapshot'
                 (vendor / 'components/selected/driver.c').write_text('changed driver source\n')
                 if staged:
                     fetch.run('git', '-C', vendor, 'add', 'components/selected/driver.c')
@@ -168,7 +168,7 @@ class FetchTests(unittest.TestCase):
             project.mkdir()
             fetch.run('git', '-C', project, 'init', '--quiet')
             fetch.run('git', '-C', project, '-c', 'protocol.file.allow=always', 'submodule',
-                      'add', '--quiet', specs['snapshot']['url'], 'upstream')
+                      'add', '--quiet', specs['snapshot']['url'], 'vendor-snapshot')
             fetch.run('git', '-C', project, '-c', 'user.name=Fixture', '-c',
                       'user.email=fixture@example.invalid', 'commit', '--no-gpg-sign', '--quiet', '-m', 'pin')
             workspace = root / 'workspace'
@@ -178,18 +178,79 @@ class FetchTests(unittest.TestCase):
                     fetch.source('linux', specs['linux'])
                 fetch.run('git', '-C', workspace, '-c', 'protocol.file.allow=always', 'submodule',
                           'update', '--init', '--recursive')
-                self.assertTrue((workspace / 'upstream/.git').is_file())
+                self.assertTrue((workspace / 'vendor-snapshot/.git').is_file())
                 for name in ['linux', 'components']:
                     self.assertEqual(fetch.source(name, specs[name]), workspace / specs[name]['directory'])
                 submodules = fetch.run('git', '-C', workspace, 'submodule', 'status', '--recursive',
                                        capture_output=True, text=True).stdout.splitlines()
                 self.assertEqual(len(submodules), 1)
 
+    def test_cached_nested_submodules_migrate_to_independent_snapshot_path(self):
+        with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
+            root = Path(directory)
+            remote = root / 'remote'
+            remote.mkdir()
+            specs = self.source_fixture(remote)
+            project = root / 'project'
+            project.mkdir()
+
+            def git(workspace, *args, check=True):
+                return subprocess.run(['git', '-C', str(workspace), '-c', 'protocol.file.allow=always',
+                                       '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                                       *args], check=check, text=True, capture_output=True)
+
+            def commit(message):
+                git(project, 'add', '.gitmodules')
+                git(project, 'commit', '--no-gpg-sign', '--quiet', '-m', message)
+                return git(project, 'rev-parse', 'HEAD').stdout.strip()
+
+            git(project, 'init', '--quiet')
+            for name in ['linux', 'components']:
+                git(project, 'submodule', 'add', '--quiet', specs['snapshot']['url'],
+                    'kernel/upstream/' + name)
+            commit('old nested submodules')
+            cache = root / 'cache'
+            git(root, 'clone', '--quiet', '--recurse-submodules', str(project), str(cache))
+            preserved = cache / 'kernel/upstream/linux/local-build-note'
+            preserved.write_text('preserve old workspace content\n')
+
+            def snapshot_layout(path):
+                (project / '.gitmodules').write_text(
+                    f'[submodule "{path}"]\n\tpath = {path}\n'
+                    f'\turl = {specs["snapshot"]["url"]}\n')
+                git(project, 'update-index', '--add', '--cacheinfo',
+                    f'160000,{specs["snapshot"]["commit"]},{path}')
+
+            for name in ['linux', 'components']:
+                git(project, 'update-index', '--force-remove', 'kernel/upstream/' + name)
+            snapshot_layout('kernel/upstream')
+            conflicting = commit('snapshot at old parent path')
+            git(cache, 'fetch', '--quiet', 'origin')
+            git(cache, 'checkout', '-f', conflicting)
+            git(cache, 'clean', '-ffdx')
+            failed = git(cache, 'submodule', 'update', '--init', '--recursive', '-f', check=False)
+            self.assertNotEqual(failed.returncode, 0, failed.stdout + failed.stderr)
+            self.assertIn('not a git repository', failed.stderr)
+
+            git(project, 'update-index', '--force-remove', 'kernel/upstream')
+            snapshot_layout('kernel/vendor-snapshot')
+            fixed = commit('snapshot at independent path')
+            git(cache, 'fetch', '--quiet', 'origin')
+            git(cache, 'checkout', '-f', fixed)
+            git(cache, 'submodule', 'sync', '--recursive')
+            git(cache, 'submodule', 'update', '--init', '--recursive', '-f')
+            with patch.object(fetch, 'KERNEL', cache / 'kernel'), patch.object(fetch, 'LOCK', specs):
+                for name in ['linux', 'components']:
+                    self.assertEqual(fetch.source(name, specs[name]),
+                                     cache / 'kernel' / specs[name]['directory'])
+            self.assertEqual(preserved.read_text(), 'preserve old workspace content\n')
+            self.assertEqual(len(git(cache, 'submodule', 'status', '--recursive').stdout.splitlines()), 1)
+
     def test_kernel_patch_in_snapshot_is_idempotent_and_preserves_unrelated_changes_on_failure(self):
         with tempfile.TemporaryDirectory(dir=KERNEL / 'work/tmp') as directory:
             root = Path(directory)
             self.source_fixture(root)
-            vendor = root / 'upstream'
+            vendor = root / 'vendor-snapshot'
             change = root / 'kernel.patch'
             change.write_text('''diff --git a/selected/input.txt b/selected/input.txt
 --- a/selected/input.txt
@@ -418,6 +479,7 @@ class PackageTests(unittest.TestCase):
                 shutil.copyfile(project / 'scripts' / name, root / 'scripts' / name)
             (root / 'config/inputs.lock.json').write_text('{}')
             for name in ['kernel/upstream/linux/private.c', 'kernel/upstream/components/private.so',
+                         'kernel/vendor-snapshot/linux/private.c', 'kernel/vendor-snapshot/components/private.so',
                          'kernel/work/cache/private.key']:
                 target = root / name
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -426,7 +488,7 @@ class PackageTests(unittest.TestCase):
             with tarfile.open(root / 'dist/orangepi6p-redroid-source.tar.gz') as archive:
                 names = archive.getnames()
                 self.assertIn('orangepi6p-redroid/.gitmodules', names)
-                self.assertFalse(any('/kernel/upstream/' in name or '/kernel/work/' in name for name in names))
+                self.assertFalse(any('/kernel/vendor-snapshot/' in name or '/kernel/upstream/' in name or '/kernel/work/' in name for name in names))
 
     def stage(self, directory):
         stage = Path(directory) / 'stage'

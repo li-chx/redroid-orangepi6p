@@ -22,7 +22,7 @@ for name in allowed:
         for directory, folders, names in os.walk(path, followlinks=False):
             folders[:] = [name for name in folders if name not in ('.git', '__pycache__')
                           and Path(directory, name).relative_to(ROOT).parts[:2]
-                          not in (('kernel', 'work'), ('kernel', 'upstream'))]
+                          not in (('kernel', 'work'), ('kernel', 'upstream'), ('kernel', 'vendor-snapshot'))]
             files.extend(Path(directory, name) for name in names)
 files=sorted(f for f in files if '__pycache__' not in f.parts and f.suffix!='.pyc'
              and f.relative_to(ROOT).parts[:2]!=('kernel','work'))
