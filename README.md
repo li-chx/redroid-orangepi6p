@@ -160,13 +160,73 @@ docker push docker.cnb.cool/your-org/your-repo/redroid:14
 
 ### 3. 启动并连接
 
-在开发板上启动并检查 Android：
+在开发板的项目根目录，检查宿主条件并准备持久化数据目录。`gpu-mapper5-stats` 是适配库的统计目录，需要允许 Android 的 UID / GID `1000:1000` 写入：
 
 ```sh
 python3 scripts/check-host.py
+mkdir -p data/redroid/gpu-mapper5-stats
+sudo chown 1000:1000 data/redroid/gpu-mapper5-stats
+sudo chmod 700 data/redroid/gpu-mapper5-stats
+```
+
+使用原始 Docker 命令启动 Android：
+
+```sh
+docker run -d \
+  --name redroid \
+  --privileged \
+  --restart=no \
+  --pull=never \
+  --mount "type=bind,src=$PWD/data/redroid,dst=/data" \
+  -p 127.0.0.1:5555:5555 \
+  docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14 \
+  androidboot.use_memfd=1 \
+  androidboot.redroid_gpu_mode=guest \
+  androidboot.redroid_width=1920 \
+  androidboot.redroid_height=1080 \
+  androidboot.redroid_fps=120 \
+  androidboot.redroid_dpi=160
+
+python3 scripts/check-runtime.py
+```
+
+<details>
+<summary>启动参数说明</summary>
+
+Docker 参数位于镜像名之前，Android 启动参数位于镜像名之后。
+
+| 参数 | 作用 |
+| --- | --- |
+| `-d` | 在后台运行容器。 |
+| `--name redroid` | 容器名，供后续 `docker start`、`docker stop`、检查脚本使用。 |
+| `--privileged` | 授予扩展权限并开放宿主设备，供当前 Android 容器方案访问 Binder、Mali 和 VPU 等设备。 |
+| `--restart=no` | 不随容器退出或 Docker 重启自动启动；需要时执行 `docker start redroid`。 |
+| `--pull=never` | 使用本地镜像，需要先完成上文的 `docker pull`。 |
+| `--mount ...` | 将项目内的 `data/redroid/` 绑定到 Android `/data`，保存应用和设置；`$PWD` 应是项目根目录。 |
+| `-p 127.0.0.1:5555:5555` | 将宿主本机的 TCP 5555 映射到容器 ADB 的 TCP 5555。左侧地址 / 端口控制宿主监听，右侧是容器端口。 |
+| `androidboot.use_memfd=1` | 使用 memfd 作为共享内存后端。 |
+| `androidboot.redroid_gpu_mode=guest` | 使用容器内的图形驱动；本镜像已配套 Mali EGL / Vulkan 和 Arm allocator / mapper。 |
+| `androidboot.redroid_width=1920`、`androidboot.redroid_height=1080` | Android 虚拟显示的宽、高，单位为像素。 |
+| `androidboot.redroid_fps=120` | 虚拟显示目标刷新率；本项目还会同步 Android 刷新率策略。实际应用和投屏帧率取决于负载及编码设置。 |
+| `androidboot.redroid_dpi=160` | Android 显示密度，影响界面缩放。 |
+
+例如将宽、高改为 `1280`、`720`，并将 FPS 改为 `60`，即可请求 1280×720、60 Hz 的虚拟显示。Docker 选项详见 [官方 docker run 文档](https://docs.docker.com/reference/cli/docker/container/run/)，Android 参数见 [ReDroid 文档](https://github.com/remote-android/redroid-doc)。
+
+</details>
+
+<details>
+<summary>也可使用项目启动脚本</summary>
+
+下面的命令自动检查宿主、准备上述目录，并使用与原始 Docker 命令相同的默认参数启动。两种方式选择一种即可，避免重复创建同名容器：
+
+```sh
 python3 scripts/run.py --image docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
 python3 scripts/check-runtime.py
 ```
+
+修改显示参数可传入 `--width`、`--height`、`--fps`、`--dpi`；修改容器名时，检查脚本也需传入相同的 `--name`，并会改用 `data/<容器名>/` 目录。
+
+</details>
 
 连接端需安装 ADB 和 scrcpy。默认容器名 `redroid`，显示为 1920×1080，ADB 地址为 `127.0.0.1:5555`。在开发板本机连接：
 
@@ -175,11 +235,7 @@ adb connect 127.0.0.1:5555
 scrcpy -s 127.0.0.1:5555 --video-encoder=c2.cix.avc.encoder -b 32M --max-fps=60
 ```
 
-若从另一台电脑连接，启动时将上面的 `run.py` 命令换成下列命令，仅在可信局域网使用；连接端将 `127.0.0.1` 换成开发板 IP：
-
-```sh
-python3 scripts/run.py --image docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14 --bind 0.0.0.0 --port 5555
-```
+若从另一台电脑连接，在创建容器时把原始命令中的端口映射改为 `-p 0.0.0.0:5555:5555`；使用项目脚本时追加 `--bind 0.0.0.0 --port 5555`。仅在可信局域网开放 ADB，连接端将 `127.0.0.1` 换成开发板 IP。已有容器的端口映射不能通过 `docker start` 修改。
 
 应用数据保存在 `data/redroid/`。已有容器用 `docker start redroid` 启动、`docker stop redroid` 停止，无需重复运行 `run.py`。保留应用数据时不要删除该目录。
 
