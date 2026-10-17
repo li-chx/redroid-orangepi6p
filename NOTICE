@@ -39,8 +39,9 @@ Kernel baseline and downloaded kernel/driver sources (upstream terms)
 kernel/configs/vendor-6.6.89-cix.config is a saved, generated configuration of the
 factory 6.6.89-cix kernel, included as a hardware baseline. The MIT grant does
 not relicense upstream kernel or driver material.
-kernel/sources.lock.json pins the Linux and component_cix-next repositories.
-The submodules under kernel/upstream/ retain their upstream terms; neither that
+kernel/sources.lock.json pins one CNB vendor snapshot and records the original
+Linux and component_cix-next commits and Git tree IDs. The snapshot submodule
+under kernel/upstream/ retains its upstream terms; neither that
 directory nor any upstream license files are covered by the root MIT grant.
 The project source-only export excludes populated submodule working trees.
 Linux and GPU/NPU/VPU/ISP sources retain all original copyright and

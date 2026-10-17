@@ -17,10 +17,10 @@
 按钮中的 `VENDOR_ARCHIVE_URL` 继续手动填写，内容改为 `orangepi6p-android14-vendor-1.0.1.tar.gz` 资源包的 HTTPS 下载直链。例如：
 
 ```text
-https://cnb.cool/li_chx/Orangepi6plus-redroid-android-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz
+https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz
 ```
 
-资源包约 23.8MB，只包含所需的 48 份原厂文件及来源/声明/清单，不需要完整官方刷机镜像。该 Release 的 [SHA256 文件](https://cnb.cool/li_chx/Orangepi6plus-redroid-android-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz.sha256) 供手动核对；CI 只需填写压缩包链接，预期 SHA256 固定在 [vendor-bundle.lock.json](../config/vendor-bundle.lock.json)，不会把远端校验文件当作新的信任来源。
+资源包约 23.8MB，只包含所需的 48 份原厂文件及来源/声明/清单，不需要完整官方刷机镜像。该 Release 的 [SHA256 文件](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz.sha256) 供手动核对；CI 只需填写压缩包链接，预期 SHA256 固定在 [vendor-bundle.lock.json](../config/vendor-bundle.lock.json)，不会把远端校验文件当作新的信任来源。
 
 流水线先运行资源包导入、头文件内容校验和 Docker 镜像身份兼容检查，共 12 项测试，再下载并验证整个包，通过显式路径白名单导入、核对包内清单及 [inputs.lock.json](../config/inputs.lock.json) 的逐文件 SHA256，然后执行原有 prepare/源码编译/镜像构建。解包完成的原始文件位于 `work/vendor-input/`；源码版本和摘要不匹配会拒绝，新的资源包版本需要同时更新仓库中的锁定信息。输入 URL 可以更换到内容一致的镜像地址，不写死在流水线中。
 
@@ -54,9 +54,9 @@ python3 scripts/check-runtime.py
 
 内核流水线固定生成 **`6.6.89-cix-redroid`**，包含树内模块、六个厂商外置模块和本板 DTB。它校验 ARM64 架构、完整 vermagic、Mali 依赖顺序及真实 deb 归档内容，并将对应的内核/驱动源码与最终配置一起打包。
 
-Linux 与厂商组件由 [.gitmodules](../.gitmodules) 注册为固定提交的子模块，放在 `kernel/upstream/`。内核任务开启 `git.submodules: { enable: true, remote: false }`，由 CNB 准备 workspace 时下载并利用平台缓存，构建步骤只核对提交，不再自行拉 GitHub；ReDroid 镜像任务明确关闭子模块。冷缓存首次下载仍依赖上游网络。行为依据 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git) 与 [git-clone-yyds](https://cnb.cool/cnb/cool/git-clone-yyds)。
+Linux 与厂商组件由 [.gitmodules](../.gitmodules) 中的一个 `kernel/upstream` submodule 提供，指向 [CNB vendor 仓库](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor) 的固定快照提交。`linux/` 的完整 Git tree 和 `components/` 的四棵公开驱动 tree 与原先锁定的上游版本一致；快照不含嵌套 submodule，因此冷缓存首次准备源码也无需访问 GitHub。内核任务保留 `git.submodules: { enable: true, remote: false }`，构建步骤校验快照提交、来源清单及 tree ID；ReDroid 镜像任务仍关闭子模块。Arm 编译器下载单独按固定 URL 和 SHA256 处理。行为依据 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git)。
 
-对应源码包只收录已打补丁的 Linux 和锁定清单中的四个公开驱动目录，排除组件仓库的其他源码和 Git 元数据；项目源码包保留 `.gitmodules`，排除整个 `kernel/upstream/` 和 `kernel/work/`。本地构建入口见 [内核 README](../kernel/README.md)。
+对应源码包只收录已打补丁的 Linux 和锁定清单中的四个公开驱动目录，附带 vendor 快照来源清单，排除其他源码和 Git 元数据；项目源码包保留 `.gitmodules`，排除整个 `kernel/upstream/` 和 `kernel/work/`。本地构建入口见 [内核 README](../kernel/README.md)。
 
 在开发板上解开外层 TAR 后执行：
 

@@ -13,10 +13,12 @@ git submodule update --init --recursive
 JOBS=8 bash kernel/build.sh
 ```
 
-Linux 和厂商组件通过 submodule 放在 `kernel/upstream/`；CNB 内核任务在准备 workspace 时拉取，本地 Git 克隆后先运行上面的初始化命令。项目源码压缩包不包含这些仓库，构建内核需使用 Git 工作树。编译器、构建产物和日志仍位于 `kernel/work/`。脚本验证源码提交，合并厂商完整配置和 [redroid.config](redroid.config)，构建 Image、树内模块和 DTB，再为同一 release 重编六个厂商模块：
+Linux 和厂商组件已合并为 [CNB vendor 快照](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor) 中的一个 submodule，位于 `kernel/upstream/`；CNB 在准备 workspace 时直接从 CNB 拉取，本地 Git 克隆后先运行上面的初始化命令。项目源码压缩包不包含这些仓库，构建内核需使用 Git 工作树。编译器、构建产物和日志仍位于 `kernel/work/`。脚本验证源码提交，合并厂商完整配置和 [redroid.config](redroid.config)，构建 Image、树内模块和 DTB，再为同一 release 重编六个厂商模块：
 
 - `memory_group_manager`、`protected_memory_allocator`、`mali_kbase`；
 - NPU `aipu`、VPU `amvx`、ISP `armcb_isp_v4l2`。
+
+从旧的两个 GitHub submodule 布局迁移时，建议保留旧工作目录，另行克隆本项目或重新创建云原生开发环境。不要直接覆盖旧的 populated submodule 目录；旧目录可能保留构建补丁和独立的 Git 元数据。
 
 `dist/kernel/` 包含 deb、完整对应源码归档、项目构建脚本源码包、最终配置、输入锁定清单、构建信息和 `SHA256SUMS`。不把固件或原厂闭源用户态库重新打进内核包，继续使用板上已有配套。
 
@@ -54,11 +56,13 @@ sudo apt install ./linux-image-6.6.89-cix-redroid_*_arm64.deb
 - 厂商配置基线来自此前保存的原板 `/proc/config.gz`，文件及 SHA 已固定；不能用小配置片段代替这份完整硬件基线。
 - Arm GNU Toolchain 12.3.Rel1，下载文件 SHA256 固定。工具链校验通过后使用 GNU tar / xz 解压，兼容 Debian 12 的 Python；完整解压后才发布到缓存目录。
 
-[.gitmodules](../.gitmodules) 为两份源码请求 shallow clone，主仓库的 gitlink 固定确切提交，`sources.lock.json` 再次核对相同 SHA。内核流水线显式开启 `git.submodules`，设置 `remote: false`，不跟踪分支最新版本；镜像流水线关闭子模块。CNB 的 `git-clone-yyds` 在缓存准备阶段更新子模块，再创建 workspace，后续可复用缓存；冷缓存仍需访问 GitHub，不保证消除所有网络错误。参见 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git)。
+[.gitmodules](../.gitmodules) 只注册 `kernel/upstream` 一个 shallow submodule，指向 CNB vendor 仓库；其中 `linux/` 是完整 Linux 源码，`components/` 只含上述四棵公开驱动源码，没有嵌套 submodule。主仓库 gitlink 和 `sources.lock.json` 固定同一个快照提交；锁定清单同时保留两份上游提交及 Git tree ID，`snapshot.json` 记录来源。源码准备不再依赖 GitHub，Arm 编译器仍按固定 URL 和 SHA256 单独下载。
 
-`fetch-sources.py` 只验证已初始化的源码、固定提交和所需驱动目录，不再执行源码 fetch / checkout / 重试。缺失子模块或提交不符时直接报错，编译器下载仍按固定 SHA 校验。构建会在 Linux 子模块中应用下述 Makefile 补丁；本地构建后 Git 显示该子模块有修改属于预期，重复构建保留且核对同一补丁。旧 `kernel/work/sources/` 缓存不再使用，也不会自动删除。
+内核流水线显式开启 `git.submodules`，设置 `remote: false`，不跟踪分支最新版本；镜像流水线关闭子模块。行为依据 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git)。
 
-组件源码的修改检查限定为 `sources.lock.json` 中实际构建和打包的四个公开驱动目录，暂存或未暂存的驱动修改都会拒绝。完整组件仓库中的无关 deb、闭源库等可能因 LFS 文件处理而显示差异；这些文件不参与内核构建，其差异不作为构建失败条件，也不会被重置或打包。
+`fetch-sources.py` 只验证已初始化的 CNB 快照、锁定提交、来源清单、原始 tree ID 和所需驱动目录，不执行源码 fetch / checkout / 重试。缺失快照、提交或 tree 不符、来源清单被修改时直接报错。编译器下载仍按固定 SHA 校验。构建会在快照的 `linux/` 中应用下述 Makefile 补丁；本地构建后 Git 显示该子模块有修改属于预期，重复构建保留且核对同一补丁。旧 `kernel/work/sources/` 缓存不再使用，也不会自动删除。
+
+驱动修改检查限定为 `sources.lock.json` 中实际构建和打包的四棵目录，暂存或未暂存的驱动修改都会拒绝。内核补丁的修改检查只作用于 `linux/`，防止将统一快照中的组件或清单误当成 Linux 补丁。对应源码包附带快照来源清单，构建信息记录 CNB 快照提交和原始上游提交。
 
 [vendor-o-build.patch](vendor-o-build.patch) 修正 9 个 Realtek Makefile 中的 23 处路径，用于源码树外的 `O=` 构建，不修改 GPU / VPU 功能。构建拒绝混入其他内核源码修改。公开 GPU 的 474 份、NPU 的 45 份 C/头文件/构建文件，已与原实验使用源码逐项比对一致。
 

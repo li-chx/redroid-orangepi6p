@@ -1,8 +1,4 @@
-[submodule "kernel/upstream/linux"]
-	path = kernel/upstream/linux
-	url = https://github.com/orangepi-xunlong/linux-orangepi.git
-	shallow = true
-[submodule "kernel/upstream/components"]
-	path = kernel/upstream/components
-	url = https://github.com/orangepi-xunlong/component_cix-next.git
+[submodule "kernel/upstream"]
+	path = kernel/upstream
+	url = https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor.git
 	shallow = true

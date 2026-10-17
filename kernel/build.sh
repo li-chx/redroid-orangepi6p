@@ -31,22 +31,22 @@ km=(make -C "$src" O="$out" ARCH=arm64 CROSS_COMPILE="$cross" LOCALVERSION=)
 mkdir -p "$out"
 
 # Reject unrelated local source changes and apply only the pinned O= patch.
-python3 - "$src" "$kernel/vendor-o-build.patch" <<'PY'
+python3 - "$kernel/upstream" "$kernel/vendor-o-build.patch" <<'PY'
 from pathlib import Path
 import subprocess, sys
-src, patch = sys.argv[1:]
-diff = subprocess.check_output(['git', '-C', src, 'diff', '--no-ext-diff', '--full-index', 'HEAD'])
+root, patch = sys.argv[1:]
+diff = subprocess.check_output(['git', '-C', root, 'diff', '--no-ext-diff', '--full-index', 'HEAD', '--', 'linux'])
 if diff:
     # Reversing our patch must leave the checkout identical to the fixed commit.
-    subprocess.run(['git', '-C', src, 'apply', '--reverse', '--check', patch], check=True)
-    subprocess.run(['git', '-C', src, 'apply', '--reverse', patch], check=True)
+    subprocess.run(['git', '-C', root, 'apply', '--directory=linux', '--reverse', '--check', patch], check=True)
+    subprocess.run(['git', '-C', root, 'apply', '--directory=linux', '--reverse', patch], check=True)
     try:
-        subprocess.run(['git', '-C', src, 'diff', '--quiet', 'HEAD'], check=True)
+        subprocess.run(['git', '-C', root, 'diff', '--quiet', 'HEAD', '--', 'linux'], check=True)
     finally:
-        subprocess.run(['git', '-C', src, 'apply', patch], check=True)
+        subprocess.run(['git', '-C', root, 'apply', '--directory=linux', patch], check=True)
 else:
-    subprocess.run(['git', '-C', src, 'apply', '--check', patch], check=True)
-    subprocess.run(['git', '-C', src, 'apply', patch], check=True)
+    subprocess.run(['git', '-C', root, 'apply', '--directory=linux', '--check', patch], check=True)
+    subprocess.run(['git', '-C', root, 'apply', '--directory=linux', patch], check=True)
 PY
 # fetch-sources.py already checked the four selected component driver trees.
 cp "$kernel/configs/vendor-6.6.89-cix.config" "$out/.config"

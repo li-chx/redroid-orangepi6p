@@ -94,3 +94,14 @@
 - 移除遗留的全组件仓库修改检查，在 `fetch-sources.py` 中按锁定清单对四个实际构建、打包的公开驱动目录检查相对 HEAD 的差异，并禁用外部 diff 与 textconv。固定提交检查保留，选定源码的暂存/未暂存修改仍拒绝，不覆盖或清理无关二进制。
 - 22 项内核测试通过。新增真实 Git 回归检查复现“未使用二进制变化使旧全仓检查退出 1”，而修复后的输入检查通过且保留该文件；另验证实际驱动的暂存、未暂存修改都被拒绝。实际固定子模块与缓存编译器输入检查通过，日志位于 `kernel/work/logs/component-scope-tests.log` 和 `component-scope-inputs.log`。
 - 本轮没有修改流水线配置、重新编译完整内核或在线重跑 CI；这些检查不代表后续编译、制品上传或板端启动已通过。
+
+
+## 2026-10-17 CNB vendor 单仓库快照
+
+- vendor 仓库已更名为 `li_chx/Orangepi6plus-redroid-vendor`；原 Release `1.0` 的两个附件 ID 和 SHA256 保持不变，新地址的 SHA256 附件也已实际下载核对。
+- 快照提交为 `46c0c4c46fc2461f2bb4c537b0beb851fe782ba7`，包含完整 Linux tree 与四棵选定的 GPU/NPU/VPU/ISP tree，共 86,010 个文件。Linux tree 为 `cd1e9fb433ab67c27dea245f77162ab46f7744d4`；组件 tree ID 见 `kernel/sources.lock.json` 与 vendor 的 `snapshot.json`。这些 Git tree 与原先固定的上游提交逐项一致，不含本地构建补丁或嵌套 gitlink。
+- 主仓库只注册 `kernel/upstream` 一个 CNB submodule，gitlink 与锁定清单指向上述快照。上游 GitHub URL 和提交继续作为来源信息记录，源码初始化不会向 GitHub 克隆；Arm 编译器仍单独下载并校验。
+- 使用独立的新工作树，从 CNB 实际执行 `git submodule update --init --recursive`，成功检出固定快照，递归子模块数为 1。随后核对来源清单和五棵 Git tree，实际执行内核补丁首次及重复应用，再反向移除该补丁并确认源码干净。本次初始化及这些检查合计约 14.18 秒，仅是该环境的一次测量。
+- 在云端执行 24 项内核测试：23 项通过，1 项因环境缺少 `grub-script-check` 而跳过。覆盖一个快照的新克隆初始化、来源/tree/清单校验、选定驱动修改拒绝、内核补丁幂等性及拒绝其他修改时保留已有内容、源码打包和现有启动/deb 检查。
+- Shell 语法检查、项目源码导出通过。对应源码包现在附带 `vendor-snapshot.json`，构建信息同时记录 CNB 快照提交和两个原始上游提交；项目源码导出继续排除 populated submodule 与工作缓存。
+- 本次验证针对源码分发、校验、补丁和打包流程，没有重新编译完整内核，也没有进行开发板启动或硬件验收。

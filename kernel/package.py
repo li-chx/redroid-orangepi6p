@@ -134,16 +134,17 @@ def source_archive(destination):
         member.mtime = epoch
         return member
     with tarfile.open(destination, 'w:xz', preset=1) as archive:
-        archive.add(KERNEL / LOCK['linux']['submodule'], arcname='sources/linux', filter=normalize)
-        # Platform checkout may contain the entire component repository, including
-        # unrelated or proprietary trees. Ship only the four selected driver trees.
+        archive.add(KERNEL / LOCK['linux']['directory'], arcname='sources/linux', filter=normalize)
+        # Keep the source bundle limited to the four locked driver trees.
         for name in LOCK['components']['paths']:
-            archive.add(KERNEL / LOCK['components']['submodule'] / name,
+            archive.add(KERNEL / LOCK['components']['directory'] / name,
                         arcname='sources/' + name, filter=normalize)
         for name in ['sources.lock.json', 'redroid.config', 'vendor-o-build.patch', 'configs', 'debian',
                      'fetch-sources.py', 'build.sh', 'package.py', 'README.md']:
             archive.add(KERNEL / name, arcname='build/' + name, filter=normalize)
         archive.add(WORK / 'build/.config', arcname='build/config.final', filter=normalize)
+        archive.add(KERNEL / LOCK['snapshot']['submodule'] / LOCK['snapshot']['manifest'],
+                    arcname='build/vendor-snapshot.json', filter=normalize)
 
 
 def main():
@@ -196,6 +197,7 @@ Read NOTICE and README.md for the component licenses and build/runtime scope.
         'release': RELEASE, 'deb_version': version, 'module_count': modules,
         'source_commit': os.environ.get('CNB_COMMIT'), 'build_id': os.environ.get('CNB_BUILD_ID'),
         'linux_commit': LOCK['linux']['commit'], 'components_commit': LOCK['components']['commit'],
+        'vendor_snapshot_commit': LOCK['snapshot']['commit'],
         'config_sha256': sha256(WORK / 'build/.config'),
         'validation': 'Build and package validation only; board boot not tested by CI',
     }, indent=2) + '\n')

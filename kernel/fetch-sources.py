@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Verify prepared source submodules and fetch the pinned compiler into kernel/work."""
+"""Verify the CNB vendor snapshot and fetch the pinned compiler into kernel/work."""
 import hashlib
 import json
 from pathlib import Path
@@ -22,25 +22,47 @@ def sha256(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
-def source(name, spec):
-    """Use the platform-prepared submodule; never fetch or change its revision."""
-    target = KERNEL / spec['submodule']
-    if not (target / '.git').exists():
+def snapshot():
+    """Require the initialized, pinned vendor submodule; never fetch or reset it."""
+    spec = LOCK['snapshot']
+    root = KERNEL / spec['submodule']
+    if not (root / '.git').exists():
         raise RuntimeError('Missing kernel submodule; run git submodule update --init --recursive')
-    top = run('git', '-C', target, 'rev-parse', '--show-toplevel',
+    top = run('git', '-C', root, 'rev-parse', '--show-toplevel',
               capture_output=True, text=True).stdout.strip()
-    if Path(top).resolve() != target.resolve():
-        raise RuntimeError(f'Not an initialized source submodule: {target}')
-    actual = run('git', '-C', target, 'rev-parse', 'HEAD', capture_output=True, text=True).stdout.strip()
+    if Path(top).resolve() != root.resolve():
+        raise RuntimeError(f'Not an initialized source submodule: {root}')
+    actual = run('git', '-C', root, 'rev-parse', 'HEAD', capture_output=True, text=True).stdout.strip()
     if actual != spec['commit']:
-        raise RuntimeError(f'Source commit mismatch: {name}; update the pinned submodule')
+        raise RuntimeError('Source snapshot commit mismatch; update the pinned submodule')
+    run('git', '-C', root, 'diff', '--no-ext-diff', '--no-textconv',
+        '--exit-code', 'HEAD', '--', spec['manifest'])
+    return root
+
+
+def source(name, spec):
+    """Verify source provenance and exact committed trees inside the vendor snapshot."""
+    root = snapshot()
+    target = KERNEL / spec['directory']
+    relative = target.relative_to(root)
+    if not target.is_dir():
+        raise RuntimeError(f'Missing source directory: {name}')
+    manifest = json.loads((root / LOCK['snapshot']['manifest']).read_text())
+    origin = manifest[name]
+    if origin['commit'] != spec['commit'] or origin['url'] != spec['url']:
+        raise RuntimeError(f'Source provenance mismatch: {name}')
     paths = spec.get('paths', [])
     for path in paths:
         if not (target / path).is_dir():
             raise RuntimeError(f'Missing selected source directory: {name}/{path}')
+    expected = {'.': spec['tree']} if 'tree' in spec else spec['trees']
+    for path, tree in expected.items():
+        subtree = (relative / path).as_posix()
+        actual = run('git', '-C', root, 'rev-parse', f'HEAD:{subtree}',
+                     capture_output=True, text=True).stdout.strip()
+        if actual != tree:
+            raise RuntimeError(f'Source tree mismatch: {name}/{path}')
     if paths:
-        # A complete component submodule also contains unrelated LFS binaries.
-        # Only these locked driver trees are built and shipped in the source bundle.
         run('git', '-C', target, 'diff', '--no-ext-diff', '--no-textconv',
             '--exit-code', 'HEAD', '--', *paths)
     return target
@@ -89,7 +111,7 @@ def main():
     source('linux', LOCK['linux'])
     source('components', LOCK['components'])
     toolchain()
-    print('Pinned kernel submodules verified; compiler ready under kernel/work/')
+    print('Pinned CNB vendor snapshot verified; compiler ready under kernel/work/')
 
 
 if __name__ == '__main__':

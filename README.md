@@ -22,7 +22,7 @@ python3 scripts/check-host.py
 
 也可使用 [CNB 流水线构建并推送到项目制品库](docs/CI.md)，在开发板上拉取使用；以下为本地构建方式。
 
-下载 [Android 14 厂商资源包](https://cnb.cool/li_chx/Orangepi6plus-redroid-android-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz)（约 23.8MB），放入 `work/downloads/`，然后执行：
+下载 [Android 14 厂商资源包](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz)（约 23.8MB），放入 `work/downloads/`，然后执行：
 
 ```sh
 python3 scripts/import-vendor-bundle.py
