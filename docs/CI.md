@@ -39,19 +39,25 @@ ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/redroid:build-${CNB_BUILD_ID}
 
 本仓库已有 ARM64 镜像可用：`docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14`。固定本次发布可使用 `build-cnb-9rb-1k53vpcv5` 标签（提交 `52c099f`）。
 
-在 Debian ARM64 开发板克隆本项目源码，然后拉取镜像。当前仓库为私有仓库，Git 和 Docker 均需使用有访问权限的凭据。下面给出本项目实际地址；自己的 Fork 应改用自己的项目路径：
+在 Debian ARM64 开发板克隆本项目源码，然后拉取镜像。下面给出本项目实际地址；自己的 Fork 应改用自己的项目路径：
 
 ```sh
 git clone https://cnb.cool/li_chx/redroid-orangepi6p.git orangepi6p-redroid
 cd orangepi6p-redroid
-docker login docker.cnb.cool --username cnb
 docker pull docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
 python3 scripts/check-host.py
 python3 scripts/run.py --image docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
 python3 scripts/check-runtime.py
 ```
 
-开发板需事先安装 Git、Docker、Python 3，并满足 [宿主内核前提](../kernel/README.md)。私有项目拉取镜像前使用 `docker login docker.cnb.cool --username cnb` 登录，密码填写具有制品读取权限的 CNB 令牌。连接和应用数据位置见 [README](../README.md)。
+开发板需事先安装 Git、Docker、Python 3，并满足 [宿主内核前提](../kernel/README.md)。连接和应用数据位置见 [README](../README.md)。
+
+<details>
+<summary>使用自己的私有 Fork</summary>
+
+若自己的 Fork 设为私有，需使用有仓库访问权限的 Git 凭据；拉取该 Fork 的镜像前，使用 `docker login docker.cnb.cool --username cnb` 登录，密码输入具有制品读取权限的 CNB 令牌。
+
+</details>
 
 镜像包含厂商组件和 ReDroid 基础层，各自沿用原许可，发布前应核对再分发条件。只发布源码可继续使用 `scripts/export-source.py`，它排除厂商二进制与所有生成目录。详见 [NOTICE](../NOTICE)。
 

@@ -83,10 +83,9 @@ git clone https://cnb.cool/li_chx/redroid-orangepi6p.git
 cd redroid-orangepi6p
 ```
 
-本仓库为私有仓库；使用有权限的 CNB 账号克隆，并先登录 Docker 制品库，密码输入具有制品读取权限的 CNB 访问令牌：
+拉取预构建的 ARM64 镜像：
 
 ```sh
-docker login docker.cnb.cool --username cnb
 docker pull docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
 ```
 
