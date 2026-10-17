@@ -4,7 +4,9 @@
 
 ## 构建与下载
 
-在 CNB 页面点击 **构建内核 deb**，完成后下载当前提交附件中的 `kernel-<构建ID>.tar`。配置与下载方式见 [CI 说明](../docs/CI.md)。
+已发布的 [内核下载包](https://cnb.cool/li_chx/redroid-orangepi6p/-/releases/download/kernel-6.6.89-cix-redroid-20261017/kernel-cnb-u9c-1k53v2noi.tar) 来自成功构建的提交 `52c099f`，包含 deb、对应源码、配置和校验清单。[Release 列表](https://cnb.cool/li_chx/redroid-orangepi6p/-/releases)提供长期保存的原始附件及外层 SHA256 文件。
+
+自行构建时，在 CNB **分支详情页**点击 **构建内核 deb**，无需填写 Android 资源包地址；成功后下载触发构建的提交附件 `kernel-<构建ID>.tar`，提交附件保留 7 天。完整的 Docker / 宿主手动构建步骤可展开 [项目 README](../README.md#1-下载并安装宿主内核) 中的说明，流水线配置见 [CI 文档](../docs/CI.md#内核-deb)。
 
 也可在 x86_64 Linux 上用 [.ci/kernel.Dockerfile](../.ci/kernel.Dockerfile) 中的依赖环境构建：
 

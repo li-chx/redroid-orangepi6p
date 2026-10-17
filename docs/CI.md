@@ -6,7 +6,9 @@
 
 1. 将本仓库上传至 CNB，打开分支页面的手动构建入口。
 2. 选择需要的构建按钮。ReDroid 需要填 Android 14 厂商资源包的公开 HTTPS 直链；内核构建不需要这个文件。
-3. ReDroid 构建完成后，在项目的 **制品库 → Docker → redroid** 查看镜像；内核构建结果仍在当前提交的附件中，文件名 `kernel-<构建ID>.tar`，保留 7 天。
+3. ReDroid 构建完成后，在项目的 **制品库 → Docker → redroid** 查看镜像；内核构建结果在触发构建的提交附件中，文件名 `kernel-<构建ID>.tar`，保留 7 天。
+
+已发布的内核可直接下载 [固定版本包](https://cnb.cool/li_chx/redroid-orangepi6p/-/releases/download/kernel-6.6.89-cix-redroid-20261017/kernel-cnb-u9c-1k53v2noi.tar)，无需自行运行 CI；[Release 列表](https://cnb.cool/li_chx/redroid-orangepi6p/-/releases)长期保存该包及外层校验文件。包内安装方式见 [内核说明](../kernel/README.md#安装与启动项)。
 
 两条流水线按需独立运行，不在普通 push 或 PR 时自动构建，也不连接开发板。ReDroid 使用 ARM64 节点，内核在 amd64 节点上使用固定的 Arm GCC 12.3 工具链交叉编译。依赖预装在 [.ci/](../.ci/) 的构建环境 Dockerfile 中，CNB 可缓存这些环境。
 

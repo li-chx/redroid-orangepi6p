@@ -113,3 +113,10 @@
 - 快照改用独立的 `kernel/vendor-snapshot` 路径和 submodule 名称，固定提交仍为 `46c0c4c46fc2461f2bb4c537b0beb851fe782ba7`。同步更新构建、锁定清单、文档和项目导出；导出同时排除新旧源码目录，不主动清理旧源码工作树。
 - 新增真实 Git 迁移回归：初始化两个旧嵌套子模块，复现父路径快照初始化失败，再检出修复版本，执行递归同步与初始化、验证来源及源码 tree，并确认旧目录中的本地文件仍保留。
 - Termux 使用标准 `umask 022` 执行 25 项内核测试，24 项通过，1 项因缺少 `grub-script-check` 跳过。Shell 语法、Python 编译、项目源码导出和差异空白检查通过。完整内核编译仍需新的 CNB 构建验证。
+
+
+## 已发布内核的 CI 构建（2026-10-17）
+
+- 提交 `52c099f5d467b35a018ffb8d24acbfc6e0223895` 的内核流水线 [cnb-u9c-1k53v2noi](https://cnb.cool/li_chx/redroid-orangepi6p/-/build/logs/cnb-u9c-1k53v2noi) 成功完成准备、测试、完整内核与六个厂商模块编译、打包和上传。
+- 原始提交附件 `kernel-cnb-u9c-1k53v2noi.tar` 为 224,409,600 字节，SHA256 为 `4b3f721c9287a245116f20c992ec52337a190f7dcab5d194c0741151aeda5148`；下载后核对外层和包内全部 10 项校验值。`build-info.json` 中的源提交、构建 ID 和 vendor 快照提交与构建一致，记录模块总数 951。
+- Release 标签 `kernel-6.6.89-cix-redroid-20261017` 指向上述构建提交，保留原始附件和外层 SHA256 文件。CI 成功不等于开发板启动或 GPU/VPU 实机验收。
