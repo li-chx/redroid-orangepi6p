@@ -6,6 +6,8 @@
 
 Android 使用虚拟显示，不接管开发板的宿主桌面。当前仅验证固定的 ReDroid、官方 Android 驱动和宿主内核组合；源码仓库不包含 Android 系统镜像、厂商驱动二进制、GMS 或应用安装包。
 
+本项目的 CI、内核 Release 和 Docker 镜像统一由 [CNB 主仓库](https://cnb.cool/li_chx/redroid-orangepi6p)提供。源码同步到 GitHub 后，仍使用下方的 CNB 构建和下载入口，无需在 GitHub 配置 CI。
+
 ## 怎么用
 
 ### 1. 下载并安装宿主内核
@@ -28,7 +30,7 @@ sudo apt install ./linux-image-6.6.89-cix-redroid_*_arm64.deb
 <details>
 <summary>自行使用 CNB CI 构建内核</summary>
 
-1. 打开本仓库或自己的 CNB Fork 的 **main 分支详情页**，点击 **构建内核 deb**；无需填写 Android 资源包地址。
+1. 打开 [CNB 主仓库](https://cnb.cool/li_chx/redroid-orangepi6p)（或自己的 CNB Fork）的 **main 分支详情页**，点击 **构建内核 deb**；无需填写 Android 资源包地址。
 2. 等待测试、内核和六个厂商模块编译、打包及上传全部成功。
 3. 在触发构建的提交附件中下载 `kernel-<构建ID>.tar`，按上面的步骤校验并安装。CI 提交附件保留 **7 天**，需要长期保存时另行上传到 Release。
 
@@ -94,14 +96,14 @@ docker pull docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
 <details>
 <summary>自行使用 CNB CI 构建镜像</summary>
 
-1. 打开本仓库或自己的 CNB Fork 的 **main 分支详情页**，点击 **构建 ReDroid 镜像**。
+1. 打开 [CNB 主仓库](https://cnb.cool/li_chx/redroid-orangepi6p)（或自己的 CNB Fork）的 **main 分支详情页**，点击 **构建 ReDroid 镜像**。
 2. 在 `VENDOR_ARCHIVE_URL` 中填写下面的公开资源包直链：
 
    ```text
    https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz
    ```
 
-3. 构建成功后，在当前项目的 **制品库 → Docker → redroid** 获取镜像地址。自己的 Fork 应把 `your-org/your-repo` 替换为实际组织与仓库路径：
+3. 构建成功后，在所用 CNB 项目的 **制品库 → Docker → redroid** 获取镜像地址。自己的 CNB Fork 应把 `your-org/your-repo` 替换为实际组织与仓库路径：
 
    ```sh
    docker pull docker.cnb.cool/your-org/your-repo/redroid:14
@@ -240,6 +242,10 @@ scrcpy -s 127.0.0.1:5555 --video-encoder=c2.cix.avc.encoder -b 32M --max-fps=60
 应用数据保存在 `data/redroid/`。已有容器用 `docker start redroid` 启动、`docker stop redroid` 停止，无需重复运行 `run.py`。保留应用数据时不要删除该目录。
 
 实现原理、版本配套、硬件监视及已知问题见 [技术说明](docs/TECHNICAL.md)，实测范围见 [验证记录](docs/VALIDATION.md)。
+
+## 非 AI 留言
+
+这个项目的实现比我想的简单很多，一方面得益于驱动和内核的实现确实足够完善，但另一方面也得益于 AI 的强大。我原本预计需要我和 AI 合作实现 Android 的图形转译层，但官方镜像中已有的驱动能做到拿来即用，最终实现上没有什么阻碍。
 
 ## 许可证
 
