@@ -2,11 +2,13 @@
 
 [.cnb.yml](../.cnb.yml) 提供两个手动流水线：**构建 ReDroid 镜像**、**构建内核 deb**。按钮配置见 [.cnb/web_trigger.yml](../.cnb/web_trigger.yml)，原 GitHub Actions 工作流已移除。
 
+触发这些手动构建需要仓库写权限，公开仓库的普通读者不能直接在主仓库运行。若要自行构建，请先在 CNB Fork，再到自己的仓库触发；只使用已发布的内核和镜像无需 Fork。权限依据见 [CNB 手动触发权限说明](https://docs.cnb.cool/zh/build/web-trigger.md#权限说明)。
+
 ## 如何使用
 
-1. 将本仓库上传至 CNB，打开分支页面的手动构建入口。
-2. 选择需要的构建按钮。ReDroid 需要填 Android 14 厂商资源包的公开 HTTPS 直链；内核构建不需要这个文件。
-3. ReDroid 构建完成后，在项目的 **制品库 → Docker → redroid** 查看镜像；内核构建结果在触发构建的提交附件中，文件名 `kernel-<构建ID>.tar`，保留 7 天。
+1. 登录 CNB，将 [CNB 主仓库](https://cnb.cool/li_chx/redroid-orangepi6p) Fork 到自己的组织。
+2. 打开自己 Fork 仓库的 **main 分支详情页**，选择需要的构建按钮。ReDroid 需要填 Android 14 厂商资源包的公开 HTTPS 直链；内核构建不需要这个文件。
+3. ReDroid 构建完成后，在自己的仓库中通过 **制品库 → Docker → redroid** 查看镜像；内核构建结果在自己仓库中触发构建的提交附件里，文件名 `kernel-<构建ID>.tar`，保留 7 天。
 
 已发布的内核可直接下载 [固定版本包](https://cnb.cool/li_chx/redroid-orangepi6p/-/releases/download/kernel-6.6.89-cix-redroid-20261017/kernel-cnb-u9c-1k53v2noi.tar)，无需自行运行 CI；[Release 列表](https://cnb.cool/li_chx/redroid-orangepi6p/-/releases)长期保存该包及外层校验文件。包内安装方式见 [内核说明](../kernel/README.md#安装与启动项)。
 

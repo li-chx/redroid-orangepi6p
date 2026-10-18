@@ -30,9 +30,10 @@ sudo apt install ./linux-image-6.6.89-cix-redroid_*_arm64.deb
 <details>
 <summary>自行使用 CNB CI 构建内核</summary>
 
-1. 打开 [CNB 主仓库](https://cnb.cool/li_chx/redroid-orangepi6p)（或自己的 CNB Fork）的 **main 分支详情页**，点击 **构建内核 deb**；无需填写 Android 资源包地址。
-2. 等待测试、内核和六个厂商模块编译、打包及上传全部成功。
-3. 在触发构建的提交附件中下载 `kernel-<构建ID>.tar`，按上面的步骤校验并安装。CI 提交附件保留 **7 天**，需要长期保存时另行上传到 Release。
+1. 登录 CNB，将 [CNB 主仓库](https://cnb.cool/li_chx/redroid-orangepi6p) **Fork 到自己的组织**。
+2. 打开自己 Fork 仓库的 **main 分支详情页**，点击 **构建内核 deb**；无需填写 Android 资源包地址。
+3. 等待测试、内核和六个厂商模块编译、打包及上传全部成功。
+4. 在自己仓库中触发构建的提交附件里下载 `kernel-<构建ID>.tar`，按上面的步骤校验并安装。CI 提交附件保留 **7 天**，需要长期保存时另行上传到 Release。
 
 任务运行在 amd64 节点，不依赖云原生开发工作区，也不会连接或修改开发板。配置见 [.cnb.yml](.cnb.yml)，更多说明见 [CI 文档](docs/CI.md#内核-deb)。
 
@@ -96,14 +97,15 @@ docker pull docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
 <details>
 <summary>自行使用 CNB CI 构建镜像</summary>
 
-1. 打开 [CNB 主仓库](https://cnb.cool/li_chx/redroid-orangepi6p)（或自己的 CNB Fork）的 **main 分支详情页**，点击 **构建 ReDroid 镜像**。
-2. 在 `VENDOR_ARCHIVE_URL` 中填写下面的公开资源包直链：
+1. 登录 CNB，将 [CNB 主仓库](https://cnb.cool/li_chx/redroid-orangepi6p) **Fork 到自己的组织**。
+2. 打开自己 Fork 仓库的 **main 分支详情页**，点击 **构建 ReDroid 镜像**。
+3. 在 `VENDOR_ARCHIVE_URL` 中填写下面的公开资源包直链：
 
    ```text
    https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz
    ```
 
-3. 构建成功后，在所用 CNB 项目的 **制品库 → Docker → redroid** 获取镜像地址。自己的 CNB Fork 应把 `your-org/your-repo` 替换为实际组织与仓库路径：
+4. 构建成功后，在自己 Fork 仓库的 **制品库 → Docker → redroid** 获取镜像地址，将 `your-org/your-repo` 替换为自己的组织与仓库路径：
 
    ```sh
    docker pull docker.cnb.cool/your-org/your-repo/redroid:14
