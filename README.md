@@ -2,9 +2,11 @@
 
 ## 这是什么
 
-在 **Orange Pi 6 Plus（CIX P1）** 上运行 Android 14 容器的适配项目，支持 Mali GPU 图形加速、Vulkan 和 CIX H.264 硬件编码，可通过 ADB / scrcpy 连接、投屏和操作 Android 应用。
+在 **Orange Pi 6 Plus（CIX P1）** 上通过 ReDroid 运行 Android 14 容器的适配项目。ReDroid 让 Android 与宿主 Linux 共享内核，无需启动完整虚拟机。本项目支持 Mali GPU 图形加速、Vulkan 和 CIX VPU（视频处理单元）的 H.264 硬件编码，可通过 ADB（Android 调试桥）和 scrcpy 投屏工具连接、投屏和操作 Android 应用。
 
 Android 使用虚拟显示，不接管开发板的宿主桌面。当前仅验证固定的 ReDroid、官方 Android 驱动和宿主内核组合；源码仓库不包含 Android 系统镜像、厂商驱动二进制、GMS 或应用安装包。
+
+已发布的 ReDroid 镜像与 `6.6.89-cix-redroid` 内核 deb 已在开发板上配套验证，Android 和游戏运行正常。此次验证复用了已有 Android 数据卷，具体版本和测试范围见 [验证记录](docs/VALIDATION.md)。
 
 本项目的 CI、内核 Release 和 Docker 镜像统一由 [CNB 主仓库](https://cnb.cool/li_chx/redroid-orangepi6p)提供。源码同步到 GitHub 后，仍使用下方的 CNB 构建和下载入口，无需在 GitHub 配置 CI。
 
@@ -12,7 +14,7 @@ Android 使用虚拟显示，不接管开发板的宿主桌面。当前仅验证
 
 ### 1. 下载并安装宿主内核
 
-适用于 Orange Pi 6 Plus 官方 Debian ARM64 系统，内核版本为 **`6.6.89-cix-redroid`**，包含 Binder 和配套 GPU / NPU / VPU / ISP 模块。已有兼容内核可跳过安装，直接进行宿主检查。
+适用于 Orange Pi 6 Plus 官方 Debian ARM64 系统，内核版本为 **`6.6.89-cix-redroid`**，包含 Android 进程间通信所需的 Binder，以及配套的图形、神经网络、视频和图像处理驱动（GPU / NPU / VPU / ISP）。已有兼容内核可跳过安装，直接进行宿主检查。
 
 下载 [内核发布包](https://cnb.cool/li_chx/redroid-orangepi6p/-/releases/download/kernel-6.6.89-cix-redroid-20261017/kernel-cnb-u9c-1k53v2noi.tar)（约 224 MB）和 [外层 SHA256 文件](https://cnb.cool/li_chx/redroid-orangepi6p/-/releases/download/kernel-6.6.89-cix-redroid-20261017/kernel-cnb-u9c-1k53v2noi.tar.sha256)；历史版本见 [Release 列表](https://cnb.cool/li_chx/redroid-orangepi6p/-/releases)。包内包含 ARM64 deb、对应内核与驱动源码、最终配置和校验清单。在开发板上执行：
 
@@ -92,7 +94,7 @@ cd redroid-orangepi6p
 docker pull docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14
 ```
 
-`14` 会随成功构建更新。需要固定本次发布的镜像时，使用 `docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:build-cnb-9rb-1k53vpcv5`；镜像平台为 `linux/arm64`。
+`14` 会随成功构建更新。需要使用 2026-10-17 发布的固定版本时，使用 `docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:build-cnb-9rb-1k53vpcv5`；镜像平台为 `linux/arm64`。该版本的构建结果与实机测试范围见 [验证记录](docs/VALIDATION.md)。
 
 <details>
 <summary>自行使用 CNB CI 构建镜像</summary>
@@ -138,7 +140,7 @@ python3 scripts/build-resources.py
 python3 scripts/image.py
 ```
 
-完成后得到本地镜像 `orangepi6p-redroid:14`。使用它启动时，将下一节的 `--image` 参数改为 `orangepi6p-redroid:14`。下载、解包和编译中间文件位于 `work/`，无需下载完整官方刷机镜像；固定资源包的校验值见 [锁定清单](config/vendor-bundle.lock.json)。
+完成后得到本地镜像 `orangepi6p-redroid:14`。使用它启动时，将下一节 `docker run` 中的镜像地址替换为 `orangepi6p-redroid:14`；使用项目启动脚本时则传入 `--image orangepi6p-redroid:14`。下载、解包和编译中间文件位于 `work/`，无需下载完整官方刷机镜像；固定资源包的校验值见 [锁定清单](config/vendor-bundle.lock.json)。
 
 <details>
 <summary>在 x86_64 Linux 构建，或推送到自己的制品库</summary>

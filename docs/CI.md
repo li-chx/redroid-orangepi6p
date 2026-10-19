@@ -1,6 +1,6 @@
 # CNB 构建与发布
 
-[.cnb.yml](../.cnb.yml) 提供两个手动流水线：**构建 ReDroid 镜像**、**构建内核 deb**。按钮配置见 [.cnb/web_trigger.yml](../.cnb/web_trigger.yml)，原 GitHub Actions 工作流已移除。
+[.cnb.yml](../.cnb.yml) 提供两个手动流水线：**构建 ReDroid 镜像**、**构建内核 deb**。按钮配置见 [.cnb/web_trigger.yml](../.cnb/web_trigger.yml)。本项目使用 CNB 执行构建并保存产物，GitHub 源码镜像不提供构建入口。
 
 触发这些手动构建需要仓库写权限，公开仓库的普通读者不能直接在主仓库运行。若要自行构建，请先在 CNB Fork，再到自己的仓库触发；只使用已发布的内核和镜像无需 Fork。权限依据见 [CNB 手动触发权限说明](https://docs.cnb.cool/zh/build/web-trigger.md#权限说明)。
 
@@ -18,15 +18,22 @@
 
 ## ReDroid 镜像
 
-按钮中的 `VENDOR_ARCHIVE_URL` 继续手动填写，内容改为 `orangepi6p-android14-vendor-1.0.1.tar.gz` 资源包的 HTTPS 下载直链。例如：
+在按钮表单的 `VENDOR_ARCHIVE_URL` 中填写 `orangepi6p-android14-vendor-1.0.1.tar.gz` 资源包的 HTTPS 下载直链：
 
 ```text
 https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz
 ```
 
-资源包约 23.8MB，只包含所需的 48 份原厂文件及来源/声明/清单，不需要完整官方刷机镜像。该 Release 的 [SHA256 文件](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz.sha256) 供手动核对；CI 只需填写压缩包链接，预期 SHA256 固定在 [vendor-bundle.lock.json](../config/vendor-bundle.lock.json)，不会把远端校验文件当作新的信任来源。
+资源包约 23.8 MB，包含构建所需的 48 份原厂驱动、配置等文件及来源声明，无需下载完整官方刷机镜像。该 Release 的 [SHA256 文件](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor/-/releases/download/1.0/orangepi6p-android14-vendor-1.0.1.tar.gz.sha256) 供手动核对；CI 使用 [vendor-bundle.lock.json](../config/vendor-bundle.lock.json) 中固定的 SHA256 校验下载内容，表单只需填写压缩包链接。
 
-流水线先运行资源包导入、头文件内容校验和 Docker 镜像身份兼容检查，共 12 项测试，再下载并验证整个包，通过显式路径白名单导入、核对包内清单及 [inputs.lock.json](../config/inputs.lock.json) 的逐文件 SHA256，然后执行原有 prepare/源码编译/镜像构建。解包完成的原始文件位于 `work/vendor-input/`；源码版本和摘要不匹配会拒绝，新的资源包版本需要同时更新仓库中的锁定信息。输入 URL 可以更换到内容一致的镜像地址，不写死在流水线中。
+流水线依次执行：
+
+1. 运行资源包导入、头文件校验和基础镜像兼容性测试。
+2. 下载资源包，校验整个归档及包内文件；只导入允许的路径，并按 [inputs.lock.json](../config/inputs.lock.json) 核对每个文件的 SHA256。
+3. 运行 `prepare.py` 整理厂商文件和基础镜像依赖，下载头文件，编译适配库并构建镜像。
+4. 将镜像推送到当前仓库的 Docker 制品库。
+
+导入的厂商文件位于 `work/vendor-input/`。URL 可以替换为提供相同内容的镜像地址；若改用其他版本的资源包，必须先核对兼容性并更新锁定清单，内容不匹配时构建会停止。
 
 表单不是密钥存储，含签名或凭据的 URL 应放入 [CNB 密钥仓库](https://docs.cnb.cool/zh/repo/secret.md)，并在 `.cnb.yml` 的 ReDroid Pipeline 中通过 `imports` 导入 `VENDOR_ARCHIVE_URL`；同时移除按钮中的必填 URL 输入。下载脚本不会主动打印 URL，产物也不记录 URL。
 
@@ -37,9 +44,9 @@ ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/redroid:14
 ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/redroid:build-${CNB_BUILD_ID}
 ```
 
-`14` 表示 Android 14，随每次成功的手动构建更新；`build-<构建ID>` 用于选定某次构建。镜像不再导出为流水线附件。源码提交记录在镜像的 `org.opencontainers.image.revision` 标签中，许可文件位于镜像内 `/vendor/etc/orangepi6p-redroid/`。
+`14` 表示 Android 14，随每次成功的手动构建更新；`build-<构建ID>` 用于选定某次构建。镜像通过 Docker 制品库分发。源码提交记录在镜像的 `org.opencontainers.image.revision` 标签中，许可文件位于镜像内 `/vendor/etc/orangepi6p-redroid/`。
 
-本仓库已有 ARM64 镜像可用：`docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14`。固定本次发布可使用 `build-cnb-9rb-1k53vpcv5` 标签（提交 `52c099f`）。
+本仓库的 ARM64 镜像地址为 `docker.cnb.cool/li_chx/redroid-orangepi6p/redroid:14`。2026-10-17 发布的固定版本使用 `build-cnb-9rb-1k53vpcv5` 标签，对应提交 `52c099f`。
 
 在 Debian ARM64 开发板克隆本项目源码，然后拉取镜像。下面给出本项目实际地址；自己的 Fork 应改用自己的项目路径：
 
@@ -61,13 +68,15 @@ python3 scripts/check-runtime.py
 
 </details>
 
-镜像包含厂商组件和 ReDroid 基础层，各自沿用原许可，发布前应核对再分发条件。只发布源码可继续使用 `scripts/export-source.py`，它排除厂商二进制与所有生成目录。详见 [NOTICE](../NOTICE)。
+镜像包含厂商组件和 ReDroid 基础层，各自沿用原许可，发布前应核对再分发条件。只发布源码时可使用 `scripts/export-source.py`，它排除厂商二进制与生成目录。详见 [NOTICE](../NOTICE)。
 
 ## 内核 deb
 
-内核流水线固定生成 **`6.6.89-cix-redroid`**，包含树内模块、六个厂商外置模块和本板 DTB。它校验 ARM64 架构、完整 vermagic、Mali 依赖顺序及真实 deb 归档内容，并将对应的内核/驱动源码与最终配置一起打包。
+内核流水线固定生成 **`6.6.89-cix-redroid`**，包含内核自带模块、六个厂商外置模块和本板的设备树文件（DTB）。构建时检查 ARM64 架构、模块版本标记（vermagic）、Mali 模块依赖顺序和 deb 内的实际文件，并将对应的内核、驱动源码与最终配置一起打包。
 
-Linux 与厂商组件由 [.gitmodules](../.gitmodules) 中的一个 `kernel/vendor-snapshot` submodule 提供，指向 [CNB vendor 仓库](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor) 的固定快照提交。`linux/` 的完整 Git tree 和 `components/` 的四棵公开驱动 tree 与原先锁定的上游版本一致；快照不含嵌套 submodule，因此冷缓存首次准备源码也无需访问 GitHub。内核任务保留 `git.submodules: { enable: true, remote: false }`，构建步骤校验快照提交、来源清单及 tree ID；ReDroid 镜像任务仍关闭子模块。Arm 编译器下载单独按固定 URL 和 SHA256 处理。行为依据 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git)。
+Linux 与厂商驱动源码由 Git 子模块 `kernel/vendor-snapshot/` 提供，来源为 [CNB vendor 仓库](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor)。子模块路径见 [.gitmodules](../.gitmodules)，固定提交、上游来源和目录内容标识见 [sources.lock.json](../kernel/sources.lock.json)。构建会校验这些信息，确保使用指定版本的源码。
+
+内核任务设置 `git.submodules: { enable: true, remote: false }`，由 CNB 在准备阶段检出固定子模块提交，不跟踪分支最新版本；ReDroid 镜像任务不需要内核源码，因此关闭子模块。源码从 CNB 下载，Arm 编译器按锁定 URL 单独下载并校验 SHA256。子模块行为见 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git)。
 
 对应源码包只收录已打补丁的 Linux 和锁定清单中的四个公开驱动目录，附带 vendor 快照来源清单，排除其他源码和 Git 元数据；项目源码包保留 `.gitmodules`，排除整个 `kernel/vendor-snapshot/` 和 `kernel/work/`。本地构建入口见 [内核 README](../kernel/README.md)。
 
@@ -80,4 +89,4 @@ sudo apt install ./linux-image-6.6.89-cix-redroid_*_arm64.deb
 
 安装成功时会自动注册 EFI GRUB 启动项并设为默认，保留原厂 `/Image` 和原厂菜单；不会自动重启。ESP 选择、支持的 Debian 布局、恢复方式和完整源码说明见 [内核 README](../kernel/README.md)。
 
-CI 的编译与打包检查不代替开发板启动、GPU / VPU 或游戏测试。实际验证结果和未验证范围见 [验证记录](VALIDATION.md)。
+CI 的编译与打包检查不代替开发板启动、GPU / VPU 或游戏测试。2026-10-17 发布的内核与镜像已由使用者在开发板上配套验证，复用已有 Android 数据卷，测试和游戏运行正常。具体测试范围见 [验证记录](VALIDATION.md)。

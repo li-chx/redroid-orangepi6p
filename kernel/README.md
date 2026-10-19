@@ -1,6 +1,6 @@
 # Orange Pi 6 Plus ReDroid 内核
 
-为 Orange Pi 6 Plus 官方 Debian ARM64 系统构建 **`6.6.89-cix-redroid`**，包含 Binder、Android 网络配置和配套 GPU / NPU / VPU / ISP 模块。版本名没有末尾的 `2`。
+为 Orange Pi 6 Plus 官方 Debian ARM64 系统构建 **`6.6.89-cix-redroid`**，包含 Binder（Android 进程间通信）、Android 所需的网络配置，以及图形、神经网络、视频和图像处理驱动（GPU / NPU / VPU / ISP）。
 
 ## 构建与下载
 
@@ -15,14 +15,14 @@ git submodule update --init --recursive
 JOBS=8 bash kernel/build.sh
 ```
 
-Linux 和厂商组件已合并为 [CNB vendor 快照](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor) 中的一个 submodule，位于 `kernel/vendor-snapshot/`；CNB 在准备 workspace 时直接从 CNB 拉取，本地 Git 克隆后先运行上面的初始化命令。项目源码压缩包不包含这些仓库，构建内核需使用 Git 工作树。编译器、构建产物和日志仍位于 `kernel/work/`。脚本验证源码提交，合并厂商完整配置和 [redroid.config](redroid.config)，构建 Image、树内模块和 DTB，再为同一 release 重编六个厂商模块：
+Linux 和厂商驱动源码由 [CNB vendor 快照](https://cnb.cool/li_chx/Orangepi6plus-redroid-vendor) 提供，作为 Git 子模块检出到 `kernel/vendor-snapshot/`。CNB 流水线自动初始化子模块；本地构建需先执行上面的初始化命令。项目源码压缩包不包含该子模块，构建内核需使用 Git 工作树。
+
+编译器、编译中间文件和日志位于 `kernel/work/`。脚本验证源码版本，合并厂商完整配置和 [redroid.config](redroid.config)，生成内核镜像 Image、内核自带模块和设备树文件（DTB），再为同一内核版本编译六个厂商模块：
 
 - `memory_group_manager`、`protected_memory_allocator`、`mali_kbase`；
 - NPU `aipu`、VPU `amvx`、ISP `armcb_isp_v4l2`。
 
-快照使用独立的 `kernel/vendor-snapshot` 路径，避免 CNB 代码缓存中旧 `kernel/upstream/linux`、`components` 子模块的 Git 元数据与父目录冲突。旧源码目录可能保留构建补丁，迁移不会主动删除；项目源码导出同时排除新旧源码目录。
-
-`dist/kernel/` 包含 deb、完整对应源码归档、项目构建脚本源码包、最终配置、输入锁定清单、构建信息和 `SHA256SUMS`。不把固件或原厂闭源用户态库重新打进内核包，继续使用板上已有配套。
+`dist/kernel/` 包含 deb、对应的内核与驱动源码归档、项目构建脚本源码包、最终配置、输入锁定清单、构建信息和 `SHA256SUMS`。内核包沿用开发板已有的配套固件和原厂用户态库，不包含它们。
 
 ## 安装与启动项
 
@@ -43,7 +43,7 @@ sudo apt install ./linux-image-6.6.89-cix-redroid_*_arm64.deb
 
 **安装不会自动重启。** 重启后用 `uname -r` 核对是否为 `6.6.89-cix-redroid`，再运行项目的宿主/容器检查。注册失败会让安装返回错误，不会静默声称成功；不要把“包已解包”当作已完成启动设置。
 
-这套启动集成针对已记录的官方 **ACPI、无 initrd、同盘 EFI 分区** 布局，不对普通 PC GRUB、LVM/加密根分区、跨盘或无法识别的启动布局作自动修改。它不会调用 `grub-install`、写固件、修改 UEFI BootOrder 或删除其他内核。
+自动注册要求官方 Debian 的启动布局：通过 ACPI 描述硬件、直接加载内核而不使用 initrd（初始内存盘），且 EFI 系统分区（ESP）与根分区位于同一磁盘。普通 PC GRUB、LVM、加密根分区、跨盘或无法识别的布局不在自动配置范围内。脚本不会调用 `grub-install`、写固件、修改 UEFI BootOrder 或删除其他内核。
 
 配置文件是 `/etc/orangepi6p-redroid-kernel.json`：`esp_device` 默认为自动发现，`make_default` 默认为 `true`。需要指定同盘 ESP 或只添加菜单时可修改它，再运行 `sudo dpkg-reconfigure linux-image-6.6.89-cix-redroid`。
 
@@ -53,21 +53,21 @@ sudo apt install ./linux-image-6.6.89-cix-redroid_*_arm64.deb
 
 固定输入见 [sources.lock.json](sources.lock.json)：
 
-- [Orange Pi Linux](https://github.com/orangepi-xunlong/linux-orangepi)，`orange-pi-6.6-cix` 路线，提交 `f41a4f0b22c0f85a645aa207435761a0123feeaf`。
+- [Orange Pi Linux](https://github.com/orangepi-xunlong/linux-orangepi)，`orange-pi-6.6-cix` 分支，提交 `f41a4f0b22c0f85a645aa207435761a0123feeaf`。
 - [component_cix-next](https://github.com/orangepi-xunlong/component_cix-next)，提交 `ba3bac4167cd5f115f3eaf4717356d2b3cb923d5`；只构建和打包锁定清单所列的四个公开 GPU / NPU / VPU / ISP 源码目录。
-- 厂商配置基线来自此前保存的原板 `/proc/config.gz`，文件及 SHA 已固定；不能用小配置片段代替这份完整硬件基线。
-- Arm GNU Toolchain 12.3.Rel1，下载文件 SHA256 固定。工具链校验通过后使用 GNU tar / xz 解压，兼容 Debian 12 的 Python；完整解压后才发布到缓存目录。
+- 完整硬件配置基线为 [vendor-6.6.89-cix.config](configs/vendor-6.6.89-cix.config)，提取自 Orange Pi 6 Plus 官方 Debian `6.6.89-cix` 内核的 `/proc/config.gz`，SHA256 固定在锁定清单中。构建时在这份完整配置上叠加 `redroid.config`。
+- Arm GNU Toolchain 12.3.Rel1，下载文件按固定 SHA256 校验，解压完成后才写入工具链缓存。
 
-[.gitmodules](../.gitmodules) 只注册 `kernel/vendor-snapshot` 一个 shallow submodule，指向 CNB vendor 仓库；其中 `linux/` 是完整 Linux 源码，`components/` 只含上述四棵公开驱动源码，没有嵌套 submodule。主仓库 gitlink 和 `sources.lock.json` 固定同一个快照提交；锁定清单同时保留两份上游提交及 Git tree ID，`snapshot.json` 记录来源。源码准备不再依赖 GitHub，Arm 编译器仍按固定 URL 和 SHA256 单独下载。
+[.gitmodules](../.gitmodules) 注册 `kernel/vendor-snapshot` 一个子模块，指向 CNB vendor 仓库；其中 `linux/` 是完整 Linux 源码，`components/` 只含上述四个公开驱动目录，没有嵌套子模块。主仓库与 `sources.lock.json` 固定同一个快照提交，锁定清单同时记录上游提交和 Git tree ID（目录内容标识），快照内的 `snapshot.json` 记录来源。源码初始化从 CNB 下载，Arm 编译器按固定 URL 和 SHA256 单独下载。
 
 内核流水线显式开启 `git.submodules`，设置 `remote: false`，不跟踪分支最新版本；镜像流水线关闭子模块。行为依据 [CNB Git 配置](https://docs.cnb.cool/zh/build/grammar.html#git)。
 
-`fetch-sources.py` 只验证已初始化的 CNB 快照、锁定提交、来源清单、原始 tree ID 和所需驱动目录，不执行源码 fetch / checkout / 重试。缺失快照、提交或 tree 不符、来源清单被修改时直接报错。编译器下载仍按固定 SHA 校验。构建会在快照的 `linux/` 中应用下述 Makefile 补丁；本地构建后 Git 显示该子模块有修改属于预期，重复构建保留且核对同一补丁。旧 `kernel/work/sources/` 缓存不再使用，也不会自动删除。
+`fetch-sources.py` 验证已初始化的 CNB 快照、锁定提交、来源清单、目录内容标识和所需驱动目录，不负责克隆或切换源码。缺失子模块时应先执行 `git submodule update --init --recursive`；提交或内容不符时构建会报错。
 
-驱动修改检查限定为 `sources.lock.json` 中实际构建和打包的四棵目录，暂存或未暂存的驱动修改都会拒绝。内核补丁的修改检查只作用于 `linux/`，防止将统一快照中的组件或清单误当成 Linux 补丁。对应源码包附带快照来源清单，构建信息记录 CNB 快照提交和原始上游提交。
+构建会在快照的 `linux/` 中应用下述 Makefile 补丁，因此构建后 Git 显示子模块有修改属于预期，重复构建会核对并保留同一补丁。其他内核源码修改，以及锁定清单所列四个驱动目录中的暂存或未暂存修改，都会被拒绝。对应源码包附带快照来源清单，构建信息记录 CNB 快照提交和原始上游提交。
 
-[vendor-o-build.patch](vendor-o-build.patch) 修正 9 个 Realtek Makefile 中的 23 处路径，用于源码树外的 `O=` 构建，不修改 GPU / VPU 功能。构建拒绝混入其他内核源码修改。公开 GPU 的 474 份、NPU 的 45 份 C/头文件/构建文件，已与原实验使用源码逐项比对一致。
+[vendor-o-build.patch](vendor-o-build.patch) 修正 Realtek Makefile 中的路径，使编译输出可放在源码目录之外（`O=` 构建），不改变 GPU / VPU 功能。
 
-历史实机验收的 release 是 `6.6.89-cix-redroid2`，对应验证记录保留原名；改用新 release 后的构建和打包不自动继承“已在开发板启动”的结论。已有内核具备所需功能的使用者可以只构建 ReDroid 镜像。固件与源代码的原始逐位对应关系仍有限制，不用 CI 构建替换板上固件。
+早期实机测试使用 `6.6.89-cix-redroid2`。2026-10-19，使用者确认这里发布的 `6.6.89-cix-redroid` 内核 deb 已在开发板安装，与发布的 ReDroid 镜像配套测试正常，游戏也正常运行；Android 复用了已有数据卷。已有兼容内核的使用者可以只构建 ReDroid 镜像；完整版本与测试对应关系见 [验证记录](../docs/VALIDATION.md)。
 
 Linux、驱动和补丁保留原许可，原创构建及启动注册脚本采用 MIT；下载包包含对应源码。详见 [NOTICE](../NOTICE) 和 [验证记录](../docs/VALIDATION.md)。
