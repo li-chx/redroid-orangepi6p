@@ -166,6 +166,11 @@ docker push docker.cnb.cool/your-org/your-repo/redroid:14
 
 ### 3. 启动并连接
 
+> [!WARNING]
+> 带水位修复的镜像会在 Android 启动时写入宿主全局的 `vm.watermark_scale_factor`，影响整台机器的内存回收。脚本以 Linux 默认值 `10` 为固定基准，再按 Android 的余量请求计算水位，避免容器反复启动时累加。在已测试的 16 GB 板上，写入的值是 `25`。
+>
+> 这会覆盖宿主原有的自定义水位，**停止容器后也会保留最后写入的值**。如果要保留宿主的调优值，请在启动前用 `sysctl vm.watermark_scale_factor` 记录，停机后按需用管理员权限手动恢复。
+
 在开发板的项目根目录，检查宿主条件并准备持久化数据目录。`gpu-mapper5-stats` 是适配库的统计目录，需要允许 Android 的 UID / GID `1000:1000` 写入：
 
 ```sh

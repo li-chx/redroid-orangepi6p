@@ -252,6 +252,10 @@
       "sha256": "6340ac38fd5db062f98fb7e365344be53d415c0ee4a888a6e94d361b30907b86"
     },
     {
+      "path": "system/bin/extra_free_kbytes.sh",
+      "sha256": "333225bca070b6a86f0f9ca936466e447537a18409a6ed54f6f6850f70200c3a"
+    },
+    {
       "path": "system/lib64/libc++.so",
       "sha256": "c651f5a04b0bb99a35df466efffc571cca953cd2c2fdcd1a30290e915135cf94"
     },

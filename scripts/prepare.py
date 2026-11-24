@@ -43,6 +43,20 @@ rootfs = WORK/'rootfs'
 if rootfs.exists():
     shutil.rmtree(rootfs)  # generated payload only; never application data
 rootfs.mkdir()
+watermark_script = Path('system/bin/extra_free_kbytes.sh')
+original = (base/watermark_script).read_text(encoding='utf-8')
+start = original.index('# record the original watermark_scale_factor value')
+end = original.index('# convert extra_free_kbytes to pages', start)
+fixed_baseline = (
+    '# The container shares this setting with the host. Its current value may\n'
+    '# already include the Android margin from a previous boot.\n'
+    'watermark_scale=10\n\n'
+)
+target = rootfs/watermark_script
+target.parent.mkdir(parents=True, exist_ok=True)
+target.write_text(original[:start] + fixed_baseline + original[end:], encoding='utf-8')
+target.chmod(0o755)
+
 for item in LOCK['vendor_files']:
     target = rootfs/item['target']
     target.parent.mkdir(parents=True, exist_ok=True)
