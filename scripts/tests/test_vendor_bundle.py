@@ -38,8 +38,13 @@ class VendorTests(unittest.TestCase):
         self.work = Path(self.temporary.name)
         (self.work / 'tmp').mkdir()
         self.files = {'vendor/bin/service': b'service', 'vendor/lib64/driver.so': b'driver'}
-        self.lock = {'vendor_files': [{'source': name, 'sha256': sha(data)}
-                                     for name, data in self.files.items()]}
+        self.lock = {
+            'vendor_archive': 'factory.7z',
+            'archive_sha256': sha(b'factory archive'),
+            'image_sha256': sha(b'factory image'),
+            'vendor_files': [{'source': name, 'sha256': sha(data)}
+                             for name, data in self.files.items()],
+        }
         self.settings = {'sha256': '', 'root_directory': 'bundle'}
         self.archive = self.work / 'bundle.tar.gz'
         for name, value in [('WORK', self.work), ('LOCK', self.lock), ('BUNDLE', self.settings)]:
@@ -110,9 +115,18 @@ class VendorTests(unittest.TestCase):
         self.assertFalse((self.work / 'vendor-input').exists())
 
     def test_different_catalog_is_rejected(self):
-        self.bundle(catalog={'vendor_files': []})
+        self.bundle(catalog=dict(self.lock, vendor_files=[]))
         with self.assertRaisesRegex(RuntimeError, 'catalog differs'):
             vendor.import_bundle(self.archive)
+
+    def test_vendor_import_allows_base_image_lock_updates(self):
+        original_catalog = dict(self.lock, base_files=[])
+        self.lock['base_files'] = [
+            {'path': 'system/bin/extra_free_kbytes.sh', 'sha256': sha(b'base script')},
+        ]
+        self.bundle(catalog=original_catalog)
+        result = vendor.import_bundle(self.archive)
+        self.assertEqual((result / 'lib64/driver.so').read_bytes(), b'driver')
 
     def test_download_hash_and_size_limits(self):
         destination = self.work / 'download.tar.gz'

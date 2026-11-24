@@ -66,7 +66,10 @@ def import_bundle(archive):
             raise RuntimeError('Incomplete vendor bundle checksum manifest')
         for name, expected in hashes.items():
             checked(stage / name, expected)
-        if json.loads((stage / 'inputs.lock.json').read_text()) != LOCK:
+        catalog = json.loads((stage / 'inputs.lock.json').read_text())
+        # The archive also carries a snapshot of the unrelated base-image lock.
+        vendor_fields = ('vendor_archive', 'archive_sha256', 'image_sha256', 'vendor_files')
+        if any(catalog.get(field) != LOCK[field] for field in vendor_fields):
             raise RuntimeError('Vendor bundle catalog differs from this project')
         verify_vendor(stage / 'vendor')
         (stage / 'vendor').rename(destination)
